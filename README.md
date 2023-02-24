@@ -7,19 +7,30 @@ JavaScript/TypeScript library to stream updates to an object.
 import { Basin } from 'object-basin'
 
 const basin = new Basin<any>()
-basin.setCursor({ jsonPath: 'message' })
-basin.write("ello")
-basin.write(" World")
-console.log(basin.items)
+basin.setCursor({ jsonPath: '$.[\'message\']' })
+basin.write("ello") // "ello"
+basin.write(" World") // "ello World"
+basin.items // { message: 'ello World' }
 
 basin.setCursor({ jsonPath: 'message', position: 0 })
-basin.write("H")
-console.log(basin.items)
+basin.write("H") // "Hello World"
+basin.items // { message: 'Hello World' }
 
 basin.setCursor({ jsonPath: 'message'})
-basin.write("!")
-console.log(basin.items)
+basin.write("!") // "Hello World!"
+basin.items // { message: 'Hello World!' }
 
+basin.setCursor({ jsonPath: 'object' })
+basin.write({ list: ["item 1", "item 2"] })
+basin.items // { message: 'Hello World!', object: { list: [ 'item 1', 'item 2' ] } }
+
+basin.setCursor({ jsonPath: 'object.list[1]', position: -1 })
+basin.write(" is the best") // { list: [ 'item 1', 'item 2 is the best' ] }
+basin.items
+// {
+//   message: 'Hello World!',
+//   object: { list: [ 'item 1', 'item 2 is the best' ] }
+// }
 ```
 
 See more examples in the [tests](src/__tests__/index.test.ts).
