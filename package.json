@@ -8,6 +8,12 @@
 	"homepage": "https://github.com/microsoft/object-basin",
 	"main": "build/index.js",
 	"types": "build/index.d.ts",
+	"keywords": [
+		"JSONPath",
+		"object",
+		"stream",
+		"update"
+	],
 	"files": [
 		"build"
 	],
