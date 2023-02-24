@@ -1,0 +1,10 @@
+*.gitattributes text eol=lf
+*.gitignore text eol=lf
+
+.eslintignore
+
+*.js text eol=lf
+*.json text eol=lf
+*.lock text eol=lf
+*.md text eol=lf
+*.ts text eol=lf
