@@ -17,6 +17,7 @@ export class BasinCursor {
 
 /**
  * A container for objects that you can write to using a JSONPath cursor.
+ * @typeparam T The type of values (top level) that will be modified.
  */
 export class Basin<T> {
 	private _currentKey?: T
