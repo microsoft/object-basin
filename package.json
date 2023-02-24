@@ -1,6 +1,6 @@
 {
 	"name": "object-basin",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "JavaScript/TypeScript library to stream updates to an object.",
 	"license": "MIT",
 	"repository": "git@github.com:microsoft/object-basin.git",

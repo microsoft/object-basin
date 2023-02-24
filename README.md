@@ -14,7 +14,7 @@ For now, this library mostly works well with updating strings, but we will suppo
 import { Basin } from 'object-basin'
 
 const basin = new Basin<any>()
-basin.setCursor({ jsonPath: '$.[\'message\']' })
+basin.setCursor({ jsonPath: '$.message' })
 basin.write("ello") // "ello"
 basin.write(" World") // "ello World"
 basin.items // { message: 'ello World' }
@@ -27,7 +27,7 @@ basin.setCursor({ jsonPath: 'message'})
 basin.write("!") // "Hello World!"
 basin.items // { message: 'Hello World!' }
 
-basin.setCursor({ jsonPath: 'object' })
+basin.setCursor({ jsonPath: '$.object' })
 basin.write({ list: ["item 1", "item 2"] })
 basin.items // { message: 'Hello World!', object: { list: [ 'item 1', 'item 2' ] } }
 
