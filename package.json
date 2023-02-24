@@ -4,6 +4,8 @@
 	"description": "JavaScript/TypeScript library to stream updates to an object.",
 	"license": "MIT",
 	"repository": "git@github.com:microsoft/object-basin.git",
+	"author": "Justin D. Harris <juharris@users.noreply.github.com>",
+	"homepage": "https://github.com/microsoft/object-basin",
 	"main": "build/index.js",
 	"types": "build/index.d.ts",
 	"files": [
