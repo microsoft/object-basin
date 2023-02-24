@@ -1,0 +1,19 @@
+{
+	"name": "object-basin",
+	"version": "0.1.0",
+	"description": "JavaScript/TypeScript library to stream updates to an object.",
+	"license": "MIT",
+	"repository": "git@github.com:microsoft/object-basin.git",
+	"main": "build/index.js",
+	"types": "build/index.d.ts",
+	"files": [
+		"build"
+	],
+	"devDependencies": {
+		"@types/jsonpath": "^0.2.0",
+		"typescript": "^4.9.5"
+	},
+	"dependencies": {
+		"jsonpath": "^1.1.1"
+	}
+}
