@@ -1,8 +1,15 @@
 # Basin
-
 JavaScript/TypeScript library to stream updates to an object.
+See in [npmjs.com](https://www.npmjs.com/package/object-basin).
+
+# Install
+```bash
+npm install object-basin
+```
 
 # Examples
+For now, this library mostly works well with updating strings, but we will support more complex updates in the future such as adding and removing items from arrays.
+
 ```TypeScript
 import { Basin } from 'object-basin'
 
