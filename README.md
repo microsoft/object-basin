@@ -16,6 +16,7 @@ import { Basin } from 'object-basin'
 const basin = new Basin<any>()
 basin.setCursor({ jsonPath: '$.message' })
 basin.write("ello") // "ello"
+basin.setCursor({ jsonPath: 'message', position: -1 })
 basin.write(" World") // "ello World"
 basin.items // { message: 'ello World' }
 
@@ -23,7 +24,7 @@ basin.setCursor({ jsonPath: 'message', position: 0 })
 basin.write("H") // "Hello World"
 basin.items // { message: 'Hello World' }
 
-basin.setCursor({ jsonPath: 'message'})
+basin.setCursor({ jsonPath: 'message', position: -1 })
 basin.write("!") // "Hello World!"
 basin.items // { message: 'Hello World!' }
 

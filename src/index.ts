@@ -5,9 +5,11 @@ import jp from 'jsonpath'
  */
 export class BasinCursor {
 	/**
-	 * 
 	 * @param jsonPath The path to the object to be updated.
-	 * @param position The position to insert the value. If undefined, the value will be set. If -1, the value will be appended. Otherwise, the value will be inserted at the specified position.
+	 * @param position The position to insert the value.
+	 * If `undefined`, the value will be set.
+	 * If -1, the value will be appended.
+	 * Otherwise, the value will be inserted at the specified position.
 	 */
 	constructor(
 		public jsonPath: string,
@@ -62,7 +64,7 @@ export class Basin<T> {
 			jp.value(this.items, this._cursor!.jsonPath, value)
 		} else {
 			if (typeof value !== 'string') {
-				throw new Error('Cannot insert a non-string value.')
+				throw new Error('Cannot update a non-string value.')
 			}
 
 			jp.apply(this.items, this._cursor!.jsonPath, (currentValue: string) => {
