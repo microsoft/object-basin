@@ -14,24 +14,35 @@ For now, this library mostly works well with updating strings, but we will suppo
 import { Basin } from 'object-basin'
 
 const basin = new Basin<any>()
+
+// Stream a string.
+// We need `$.` when the key does not exist yet.
 basin.setCursor({ jsonPath: '$.message' })
 basin.write("ello") // "ello"
 basin.setCursor({ jsonPath: 'message', position: -1 })
 basin.write(" World") // "ello World"
 basin.items // { message: 'ello World' }
 
+// Insert at the beginning of the string.
 basin.setCursor({ jsonPath: 'message', position: 0 })
 basin.write("H") // "Hello World"
 basin.items // { message: 'Hello World' }
 
+// Append to the end of the string.
 basin.setCursor({ jsonPath: 'message', position: -1 })
 basin.write("!") // "Hello World!"
 basin.items // { message: 'Hello World!' }
 
+// Stream parts of an object.
 basin.setCursor({ jsonPath: '$.object' })
-basin.write({ list: ["item 1", "item 2"] })
+basin.write({ list: ["item 1"] }) // { list: ["item 1"] }
+
+// Append to the end of a list.
+basin.setCursor({ jsonPath: '$.object.list', position: -1 })
+basin.write("item 2") // { list: ["item 1", "item 2"] }
 basin.items // { message: 'Hello World!', object: { list: [ 'item 1', 'item 2' ] } }
 
+// Append to the end of a string in a list.
 basin.setCursor({ jsonPath: 'object.list[1]', position: -1 })
 basin.write(" is the best") // { list: [ 'item 1', 'item 2 is the best' ] }
 basin.items
@@ -39,6 +50,14 @@ basin.items
 //   message: 'Hello World!',
 //   object: { list: [ 'item 1', 'item 2 is the best' ] }
 // }
+
+// Insert in a list.
+basin.setCursor({ jsonPath: 'object.list', position: 1 })
+basin.write("item 1.5") // { list: ['item 1', 'item 1.5', 'item 2 is the best'] }
+
+// Overwrite an item in a list.
+basin.setCursor({ jsonPath: 'object.list[1]'})
+basin.write("item 1.33") // { list: ['item 1', 'item 1.33', 'item 2 is the best'] }
 ```
 
 See more examples in the [tests](src/__tests__/index.test.ts).

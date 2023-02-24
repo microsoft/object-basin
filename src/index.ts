@@ -63,18 +63,26 @@ export class Basin<T> {
 			// Set the value.
 			jp.value(this.items, this._cursor!.jsonPath, value)
 		} else {
-			if (typeof value !== 'string') {
-				throw new Error('Cannot update a non-string value.')
-			}
-
 			jp.apply(this.items, this._cursor!.jsonPath, (currentValue: string) => {
-				if (position === -1) {
-					// Append.
-					return currentValue + value
+				if (Array.isArray(currentValue)) {
+					if (position === -1) {
+						// Append.
+						currentValue.push(value)
+					} else {
+						// Insert
+						currentValue.splice(position, 0, value)
+					}
+					return currentValue
 				} else {
-					// Insert.
-					this._cursor!.position! += value.length
-					return currentValue.slice(0, position) + value + currentValue.slice(position)
+					// Assume the value is a number, string, or something that works `+` and `slice`.
+					if (position === -1) {
+						// Append.
+						return currentValue + value
+					} else {
+						// Insert.
+						this._cursor!.position! += value.length
+						return currentValue.slice(0, position) + value + currentValue.slice(position)
+					}
 				}
 			})
 		}

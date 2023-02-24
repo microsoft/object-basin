@@ -64,7 +64,9 @@ describe('Basin', () => {
 		expect(basin.items).to.deep.equal({ message: 'Hello World!' })
 
 		basin.setCursor({ jsonPath: '$.object' })
-		expect(basin.write({ list: ["item 1", "item 2"] })).to.deep.equal({ list: ["item 1", "item 2"] })
+		expect(basin.write({ list: ["item 1"] })).to.deep.equal({ list: ["item 1"] })
+		basin.setCursor({ jsonPath: '$.object.list', position: -1 })
+		expect(basin.write("item 2")).to.deep.equal({ list: ["item 1", "item 2"] })
 		expect(basin.items).to.deep.equal({ message: 'Hello World!', object: { list: ['item 1', 'item 2'] } })
 
 		basin.setCursor({ jsonPath: 'object.list[1]', position: -1 })
@@ -73,5 +75,29 @@ describe('Basin', () => {
 			message: 'Hello World!',
 			object: { list: ['item 1', 'item 2 is the best'] },
 		})
+
+		basin.setCursor({ jsonPath: 'object.list', position: 1 })
+		expect(basin.write("item 1.5")).to.deep.equal({ list: ['item 1', 'item 1.5', 'item 2 is the best'] })
+
+		basin.setCursor({ jsonPath: 'object.list[1]'})
+		expect(basin.write("item 1.33")).to.deep.equal({ list: ['item 1', 'item 1.33', 'item 2 is the best'] })
+	})
+
+	it('list insert', () => {
+		const basin = new Basin<any>({ list: [] })
+		basin.setCursor({ jsonPath: 'list[0]' })
+		expect(basin.write('a')).to.deep.equal(['a'])
+		basin.setCursor({ jsonPath: 'list[1]' })
+		expect(basin.write('b')).to.deep.equal(['a', 'b'])
+		basin.setCursor({ jsonPath: 'list', position: -1 })
+		expect(basin.write('c')).to.deep.equal(['a', 'b', 'c'])
+		basin.setCursor({ jsonPath: '$.holder.list2' })
+		expect(basin.write([1])).to.deep.equal({ list2: [1] })
+		basin.setCursor({ jsonPath: 'holder.list2[1]' })
+		expect(basin.write(2)).to.deep.equal({ list2: [1, 2] })
+		basin.setCursor({ jsonPath: 'holder.list2', position: -1 })
+		expect(basin.write(3)).to.deep.equal({ list2: [1, 2, 3] })
+		basin.setCursor({ jsonPath: 'holder.list2[1]', position: -1 })
+		expect(basin.write(4)).to.deep.equal({ list2: [1, 2 + 4, 3] })
 	})
 })
