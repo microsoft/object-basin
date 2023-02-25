@@ -1,5 +1,7 @@
 # Basin
 JavaScript/TypeScript library to stream updates to an object.
+Streams flow into a basin.
+
 See in [npmjs.com](https://www.npmjs.com/package/object-basin).
 
 # Install
@@ -16,22 +18,27 @@ import { Basin } from 'object-basin'
 const basin = new Basin<any>()
 
 // Stream a string.
-// We need `$.` when the key does not exist yet.
+// `$.` is needed when the key does not exist yet.
 basin.setCursor({ jsonPath: '$.message' })
 basin.write("ello") // "ello"
-basin.setCursor({ jsonPath: 'message', position: -1 })
-basin.write(" World") // "ello World"
-basin.items // { message: 'ello World' }
-
-// Insert at the beginning of the string.
-basin.setCursor({ jsonPath: 'message', position: 0 })
-basin.write("H") // "Hello World"
-basin.items // { message: 'Hello World' }
 
 // Append to the end of the string.
 basin.setCursor({ jsonPath: 'message', position: -1 })
-basin.write("!") // "Hello World!"
-basin.items // { message: 'Hello World!' }
+basin.write(" World") // "ello World"
+basin.write("!") // "ello World!"
+basin.items // { message: "ello World!" }
+
+// Insert at the beginning of the string.
+basin.setCursor({ jsonPath: 'message', position: 0 })
+basin.write("H") // "Hello World!"
+basin.items // { message: "Hello World!" }
+
+// Stream a string.
+basin.setCursor({ jsonPath: 'message', position: -1 })
+basin.write(" It's") // "Hello World! It's"
+basin.write(" nice ") // "Hello World! It's nice "
+basin.write("to stream") // "Hello World! It's nice to stream"
+basin.write(" to you.") // "Hello World! It's nice to stream to you."
 
 // Stream parts of an object.
 basin.setCursor({ jsonPath: '$.object' })
@@ -40,14 +47,14 @@ basin.write({ list: ["item 1"] }) // { list: ["item 1"] }
 // Append to the end of a list.
 basin.setCursor({ jsonPath: '$.object.list', position: -1 })
 basin.write("item 2") // { list: ["item 1", "item 2"] }
-basin.items // { message: 'Hello World!', object: { list: [ 'item 1', 'item 2' ] } }
+basin.items // { message: "Hello World! It's nice to stream to you.", object: { list: [ 'item 1', 'item 2' ] } }
 
 // Append to the end of a string in a list.
 basin.setCursor({ jsonPath: 'object.list[1]', position: -1 })
 basin.write(" is the best") // { list: [ 'item 1', 'item 2 is the best' ] }
 basin.items
 // {
-//   message: 'Hello World!',
+//   message: "Hello World! It's nice to stream to you.",
 //   object: { list: [ 'item 1', 'item 2 is the best' ] }
 // }
 
