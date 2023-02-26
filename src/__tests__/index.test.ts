@@ -56,11 +56,11 @@ describe('Basin', () => {
 		expect(basin.write("!")).to.equal("ello World!")
 		expect(basin.items).to.deep.equal({ message: "ello World!" })
 
-		basin.setCursor({ jsonPath: 'message', position: 0 })
+		basin.setCursor({ j: 'message', p: 0 })
 		expect(basin.write("H")).to.equal("Hello World!")
 		expect(basin.items).to.deep.equal({ message: "Hello World!" })
 
-		basin.setCursor({ jsonPath: 'message', position: -1 })
+		basin.setCursor({ jsonPath: 'message', p: -1 })
 		expect(basin.write(" It's")).to.equal("Hello World! It's")
 		expect(basin.write(" nice ")).to.equal("Hello World! It's nice ")
 		expect(basin.write("to stream")).to.equal("Hello World! It's nice to stream")
@@ -84,6 +84,17 @@ describe('Basin', () => {
 
 		basin.setCursor({ jsonPath: 'object.list[1]' })
 		expect(basin.write("item 1.33")).to.deep.equal({ list: ['item 1', 'item 1.33', 'item 2 is the best'] })
+
+		basin.setCursor({ jsonPath: 'object.list', p: -1 })
+		expect(basin.write('item 3')).to.deep.equal({ list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3'] })
+		expect(basin.write('item 4')).to.deep.equal({ list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3', 'item 4'] })
+		expect(basin.write('item 5')).to.deep.equal({ list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] })
+
+		basin.setCursor({ jsonPath: 'object.list', p: 0, deleteCount: 1 })
+		expect(basin.write(undefined)).to.deep.equal({ list: ['item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] })
+
+		basin.setCursor({ jsonPath: 'object.list', p: 1, d: 2 })
+		expect(basin.write(undefined)).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
 	})
 
 	it('list insert', () => {

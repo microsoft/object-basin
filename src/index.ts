@@ -5,15 +5,32 @@ import jp from 'jsonpath'
  */
 export class BasinCursor {
 	/**
+	 * A more concise way to specify the {@link jsonPath}.
+	 */
+	public j?: string
+	/**
+	 * A more concise way to specify the {@link position}.
+	 */
+	public p?: number
+	/**
+	 * A more concise way to specify the {@link deleteCount}.
+	 */
+	public d?: number
+
+	/**
 	 * @param jsonPath The path to the object to be updated.
 	 * @param position The position to insert the value.
 	 * If `undefined`, the value will be set.
 	 * If -1, the value will be appended.
 	 * Otherwise, the value will be inserted at the specified position.
+	 * @param deleteCount The number of items to delete starting from {@link position}.
+	 * `undefined` means no items will be deleted.
 	 */
 	constructor(
-		public jsonPath: string,
-		public position?: number) {
+		public jsonPath?: string,
+		public position?: number,
+		public deleteCount?: number,
+	) {
 	}
 }
 
@@ -41,13 +58,22 @@ export class Basin<T> {
 	 */
 	public setCursor(cursor: BasinCursor): void {
 		this._cursor = cursor
-		const expressions = jp.parse(cursor.jsonPath)
+		if (cursor.j !== undefined) {
+			cursor.jsonPath = cursor.j
+		}
+		if (cursor.p !== undefined) {
+			cursor.position = cursor.p
+		}
+		if (cursor.d !== undefined) {
+			cursor.deleteCount = cursor.d
+		}
+
+		const expressions = jp.parse(cursor.jsonPath!)
 		for (const expression of expressions) {
-			if (expression.expression.type === 'root') {
-				continue
+			if (expression.expression.type !== 'root') {
+				this._currentKey = expression.expression.value
+				break
 			}
-			this._currentKey = expression.expression.value
-			break
 		}
 	}
 
@@ -58,29 +84,36 @@ export class Basin<T> {
 	 */
 	public write(value: any): T {
 		// For efficiency, assume the cursor is set.
-		const position = this._cursor!.position
+		const cursor = this._cursor!
+		const position = cursor.position
+		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.
-			jp.value(this.items, this._cursor!.jsonPath, value)
+			jp.value(this.items, jsonPath, value)
 		} else {
-			jp.apply(this.items, this._cursor!.jsonPath, (currentValue: string) => {
+			jp.apply(this.items, jsonPath, (currentValue: string) => {
 				if (Array.isArray(currentValue)) {
 					if (position === -1) {
-						// Append.
+						// Append
 						currentValue.push(value)
 					} else {
-						// Insert
-						currentValue.splice(position, 0, value)
+						if (cursor.deleteCount !== undefined) {
+							// Delete
+							currentValue.splice(position, cursor.deleteCount)
+						} else {
+							// Insert
+							currentValue.splice(position, 0, value)
+						}
 					}
 					return currentValue
 				} else {
 					// Assume the value is a number, string, or something that works `+` and `slice`.
 					if (position === -1) {
-						// Append.
+						// Append
 						return currentValue + value
 					} else {
-						// Insert.
-						this._cursor!.position! += value.length
+						// Insert
+						cursor.position! += value.length
 						return currentValue.slice(0, position) + value + currentValue.slice(position)
 					}
 				}
