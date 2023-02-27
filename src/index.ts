@@ -23,8 +23,8 @@ export class BasinCursor {
 	 * If `undefined`, the value will be set.
 	 * If -1, the value will be appended.
 	 * Otherwise, the value will be inserted at the specified position.
-	 * @param deleteCount The number of items to delete starting from {@link position}.
-	 * `undefined` means no items will be deleted.
+	 * @param deleteCount If the {@link jsonPath} point to a list and this is not `undefined`, then this number of items will be removed from the list starting from {@link position}.
+	 * {@link position} must not be `undefined` to delete items.
 	 */
 	constructor(
 		public jsonPath?: string,
@@ -79,10 +79,11 @@ export class Basin<T> {
 
 	/**
 	 * Write or set a value.
-	 * @param value The value to write or insert. Assumed to be a string, but other values might work and will be allowed in the future.
+	 * @param value The value to write or insert.
+	 * Ignored when deleting items.
 	 * @returns The current top level item that was modified.
 	 */
-	public write(value: any): T {
+	public write(value?: any): T {
 		// For efficiency, assume the cursor is set.
 		const cursor = this._cursor!
 		const position = cursor.position
@@ -93,17 +94,15 @@ export class Basin<T> {
 		} else {
 			jp.apply(this.items, jsonPath, (currentValue: string) => {
 				if (Array.isArray(currentValue)) {
-					if (position === -1) {
+					if (cursor.deleteCount !== undefined) {
+						// Delete
+						currentValue.splice(position, cursor.deleteCount)
+					} else if (position === -1) {
 						// Append
 						currentValue.push(value)
 					} else {
-						if (cursor.deleteCount !== undefined) {
-							// Delete
-							currentValue.splice(position, cursor.deleteCount)
-						} else {
-							// Insert
-							currentValue.splice(position, 0, value)
-						}
+						// Insert
+						currentValue.splice(position, 0, value)
 					}
 					return currentValue
 				} else {
@@ -114,7 +113,8 @@ export class Basin<T> {
 					} else {
 						// Insert
 						cursor.position! += value.length
-						return currentValue.slice(0, position) + value + currentValue.slice(position)
+						const deleteCount = cursor.deleteCount || 0
+						return currentValue.slice(0, position) + value + currentValue.slice(position + deleteCount)
 					}
 				}
 			})

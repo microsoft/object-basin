@@ -7,12 +7,12 @@ See in [npmjs.com](https://www.npmjs.com/package/object-basin).
 This library supports various ways to update objects or their contents:
 * appending to the end of a string
 * inserting anywhere in a string
+* removing characters from a string
 * appending to the end of a list
 * inserting anywhere in a list
 * overwriting an item in a list
 * deleting items in a list
 * overwriting an item in an object
-* deleting items in an object
 
 # Install
 ```bash
@@ -83,13 +83,17 @@ basin.write('item 5') // { list: ['item 1', 'item 1.33', 'item 2 is the best', '
 
 // Delete the first item in the list.
 basin.setCursor({ jsonPath: 'object.list', p: 0, deleteCount: 1 })
+// The value given to `write` is ignored when deleting items.
 basin.write(undefined) // { list: ['item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] }
 
 // Delete 2 items in the list starting at index 1.
 // `d` can be used to be more concise.
 basin.setCursor({ jsonPath: 'object.list', p: 1, d: 2 })
-expect(basin.write(undefined)).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
+expect(basin.write()).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
 
+// Delete and insert into a string
+basin.setCursor({ jsonPath: 'object.list[0]', p: 6, d: 3 })
+basin.write('!') // { list: ['item 1!', 'item 4', 'item 5'] }
 ```
 
 See more examples in the [tests](src/__tests__/index.test.ts).

@@ -94,7 +94,10 @@ describe('Basin', () => {
 		expect(basin.write(undefined)).to.deep.equal({ list: ['item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] })
 
 		basin.setCursor({ jsonPath: 'object.list', p: 1, d: 2 })
-		expect(basin.write(undefined)).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
+		expect(basin.write()).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
+
+		basin.setCursor({ jsonPath: 'object.list[0]', p: 6, d: 3 })
+		expect(basin.write('!')).to.deep.equal({ list: ['item 1!', 'item 4', 'item 5'] })
 	})
 
 	it('list insert', () => {
