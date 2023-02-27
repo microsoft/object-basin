@@ -80,7 +80,7 @@ export class Basin<T> {
 	/**
 	 * Write or set a value.
 	 * @param value The value to write or insert.
-	 * Ignored when deleting items.
+	 * Ignored when deleting items from lists.
 	 * @returns The current top level item that was modified.
 	 */
 	public write(value?: any): T {
