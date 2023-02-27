@@ -5,15 +5,32 @@ import jp from 'jsonpath'
  */
 export class BasinCursor {
 	/**
-	 * @param jsonPath The path to the object to be updated.
+	 * A more concise way to specify the {@link jsonPath}.
+	 */
+	public j?: string
+	/**
+	 * A more concise way to specify the {@link position}.
+	 */
+	public p?: number
+	/**
+	 * A more concise way to specify the {@link deleteCount}.
+	 */
+	public d?: number
+
+	/**
+	 * @param jsonPath The path to the value to be updated.
 	 * @param position The position to insert the value.
 	 * If `undefined`, the value will be set.
 	 * If -1, the value will be appended.
 	 * Otherwise, the value will be inserted at the specified position.
+	 * @param deleteCount If the {@link jsonPath} points a list or string and this is not `undefined`, then this number of items will be removed from the list or string starting from {@link position}.
+	 * {@link position} must not be `undefined` to delete items.
 	 */
 	constructor(
-		public jsonPath: string,
-		public position?: number) {
+		public jsonPath?: string,
+		public position?: number,
+		public deleteCount?: number,
+	) {
 	}
 }
 
@@ -41,32 +58,47 @@ export class Basin<T> {
 	 */
 	public setCursor(cursor: BasinCursor): void {
 		this._cursor = cursor
-		const expressions = jp.parse(cursor.jsonPath)
+		if (cursor.j !== undefined) {
+			cursor.jsonPath = cursor.j
+		}
+		if (cursor.p !== undefined) {
+			cursor.position = cursor.p
+		}
+		if (cursor.d !== undefined) {
+			cursor.deleteCount = cursor.d
+		}
+
+		const expressions = jp.parse(cursor.jsonPath!)
 		for (const expression of expressions) {
-			if (expression.expression.type === 'root') {
-				continue
+			if (expression.expression.type !== 'root') {
+				this._currentKey = expression.expression.value
+				break
 			}
-			this._currentKey = expression.expression.value
-			break
 		}
 	}
 
 	/**
 	 * Write or set a value.
-	 * @param value The value to write or insert. Assumed to be a string, but other values might work and will be allowed in the future.
+	 * @param value The value to write or insert.
+	 * Ignored when deleting items from lists.
 	 * @returns The current top level item that was modified.
 	 */
-	public write(value: any): T {
+	public write(value?: any): T {
 		// For efficiency, assume the cursor is set.
-		const position = this._cursor!.position
+		const cursor = this._cursor!
+		const position = cursor.position
+		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.
-			jp.value(this.items, this._cursor!.jsonPath, value)
+			jp.value(this.items, jsonPath, value)
 		} else {
-			jp.apply(this.items, this._cursor!.jsonPath, (currentValue: string) => {
+			jp.apply(this.items, jsonPath, (currentValue: string) => {
 				if (Array.isArray(currentValue)) {
-					if (position === -1) {
-						// Append.
+					if (cursor.deleteCount !== undefined) {
+						// Delete
+						currentValue.splice(position, cursor.deleteCount)
+					} else if (position === -1) {
+						// Append
 						currentValue.push(value)
 					} else {
 						// Insert
@@ -76,12 +108,13 @@ export class Basin<T> {
 				} else {
 					// Assume the value is a number, string, or something that works `+` and `slice`.
 					if (position === -1) {
-						// Append.
+						// Append
 						return currentValue + value
 					} else {
-						// Insert.
-						this._cursor!.position! += value.length
-						return currentValue.slice(0, position) + value + currentValue.slice(position)
+						// Insert
+						cursor.position! += value.length
+						const deleteCount = cursor.deleteCount || 0
+						return currentValue.slice(0, position) + value + currentValue.slice(position + deleteCount)
 					}
 				}
 			})

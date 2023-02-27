@@ -1,8 +1,18 @@
 # Basin
 JavaScript/TypeScript library to stream updates to an object.
-Streams flow into a basin.
+It is called Basin because streams flow into a basin.
 
 See in [npmjs.com](https://www.npmjs.com/package/object-basin).
+
+This library supports various ways to update objects or their contents:
+* appending to the end of a string
+* inserting anywhere in a string
+* removing characters from a string
+* appending to the end of a list
+* inserting anywhere in a list
+* overwriting an item in a list
+* deleting items in a list
+* setting a value in an object
 
 # Install
 ```bash
@@ -10,8 +20,6 @@ npm install object-basin
 ```
 
 # Examples
-For now, this library mostly works well with updating strings, but we will support more complex updates in the future such as adding and removing items from arrays.
-
 ```TypeScript
 import { Basin } from 'object-basin'
 
@@ -29,12 +37,13 @@ basin.write("!") // "ello World!"
 basin.items // { message: "ello World!" }
 
 // Insert at the beginning of the string.
-basin.setCursor({ jsonPath: 'message', position: 0 })
+// `j` and `p` can be used to be more concise.
+basin.setCursor({ j: 'message', p: 0 })
 basin.write("H") // "Hello World!"
 basin.items // { message: "Hello World!" }
 
 // Stream a string.
-basin.setCursor({ jsonPath: 'message', position: -1 })
+basin.setCursor({ jsonPath: 'message', p: -1 })
 basin.write(" It's") // "Hello World! It's"
 basin.write(" nice ") // "Hello World! It's nice "
 basin.write("to stream") // "Hello World! It's nice to stream"
@@ -65,6 +74,26 @@ basin.write("item 1.5") // { list: ['item 1', 'item 1.5', 'item 2 is the best'] 
 // Overwrite an item in a list.
 basin.setCursor({ jsonPath: 'object.list[1]'})
 basin.write("item 1.33") // { list: ['item 1', 'item 1.33', 'item 2 is the best'] }
+
+// Add a few more items to the list.
+basin.setCursor({ jsonPath: 'object.list', p: -1 })
+basin.write('item 3') // { list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3'] }
+basin.write('item 4') // { list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3', 'item 4'] }
+basin.write('item 5') // { list: ['item 1', 'item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] }
+
+// Delete the first item in the list.
+basin.setCursor({ jsonPath: 'object.list', p: 0, deleteCount: 1 })
+// The value given to `write` is ignored when deleting items from lists.
+basin.write(undefined) // { list: ['item 1.33', 'item 2 is the best', 'item 3', 'item 4', 'item 5'] }
+
+// Delete 2 items in the list starting at index 1.
+// `d` can be used to be more concise.
+basin.setCursor({ jsonPath: 'object.list', p: 1, d: 2 })
+expect(basin.write()).to.deep.equal({ list: ['item 1.33', 'item 4', 'item 5'] })
+
+// Delete from and insert into a string
+basin.setCursor({ jsonPath: 'object.list[0]', p: 6, d: 3 })
+basin.write('!') // { list: ['item 1!', 'item 4', 'item 5'] }
 ```
 
 See more examples in the [tests](src/__tests__/index.test.ts).
