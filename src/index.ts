@@ -18,12 +18,12 @@ export class BasinCursor {
 	public d?: number
 
 	/**
-	 * @param jsonPath The path to the object to be updated.
+	 * @param jsonPath The path to the value to be updated.
 	 * @param position The position to insert the value.
 	 * If `undefined`, the value will be set.
 	 * If -1, the value will be appended.
 	 * Otherwise, the value will be inserted at the specified position.
-	 * @param deleteCount If the {@link jsonPath} point to a list and this is not `undefined`, then this number of items will be removed from the list starting from {@link position}.
+	 * @param deleteCount If the {@link jsonPath} points a list or string and this is not `undefined`, then this number of items will be removed from the list or string starting from {@link position}.
 	 * {@link position} must not be `undefined` to delete items.
 	 */
 	constructor(
