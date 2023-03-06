@@ -3,8 +3,13 @@
 
 .eslintignore
 
+LICENSE text eol=lf
+
+*.cs text eol=lf
+*.csproj text eol=lf
 *.js text eol=lf
 *.json text eol=lf
 *.lock text eol=lf
 *.md text eol=lf
 *.ts text eol=lf
+*.yml text eol=lf
