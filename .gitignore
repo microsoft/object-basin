@@ -1,4 +1,7 @@
-/build/
+/dotnet/bin/
+/dotnet/obj/
+
+/js/build/
 
 # Logs
 logs

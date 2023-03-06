@@ -15,10 +15,10 @@ This library supports various ways to update objects or their contents:
 * setting a value in an object
 
 # JavaScript / Node.js
-See examples and installation instructions in [js/README.md](js/README.md).
+See examples and installation instructions in the [js folder](js/).
 
 # .NET / C#
-See examples and installation instructions in [dotnet/README.md](dotnet/README.md).
+See examples and installation instructions in the [dotnet folder](dotnet/).
 
 ## Contributing
 
