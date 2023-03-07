@@ -1,5 +1,6 @@
-/dotnet/bin/
-/dotnet/obj/
+.vs/
+bin/
+obj/
 
 /js/build/
 

@@ -1,8 +1,9 @@
 # Basin
-A library and specification to stream updates to an object.
-It is called Basin because streams flow into a basin.
+A specification and libraries to stream updates to an object.
+We use the term "basin" because streams flow into a basin.
 
 See in [npmjs.com](https://www.npmjs.com/package/object-basin).
+TODO Add NuGet link.
 
 This library supports various ways to update objects or their contents:
 * appending to the end of a string
