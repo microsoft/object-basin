@@ -1,6 +1,7 @@
 ﻿namespace ObjectBasin
 {
 	using System.Text.Json;
+	using Newtonsoft.Json.Linq;
 
 	/// <summary>
 	/// A container for objects that you can write to using a JSONPath cursor.
@@ -8,19 +9,24 @@
 	/// <typeparam name="T">The type of values (top level) that will be modified.</typeparam>
 	public class Basin<T>
 	{
-		public Basin(JsonElement items)
-		{
+		private BasinCursor? cursor;
 
+		public Basin(object items)
+		{
+			Items = items;
 		}
+
+		public object Items { get; }
 
 		public void SetCursor(BasinCursor cursor)
 		{
+			this.cursor = cursor;
 			// TODO
 		}
 
-		public T Write(JsonElement? value)
+		public T Write(object value)
 		{
-			// TODO
+			// TODO JObject.FromObject(this.Items).SelectTokens
 			return default;
 		}
 	}
