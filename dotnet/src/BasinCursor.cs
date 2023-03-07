@@ -12,10 +12,22 @@
 	public class BasinCursor
 	{
 		/// <summary>
+		/// JSON Patch path.
+		/// Learn more about JSON Patch at <a href="https://jsonpatch.com/">jsonpatch.com/</a>.
+		/// </summary>
+		/// <remarks>
+		/// Note that that concise name &quot;a&quot; is used for serialization.
+		/// </remarks>
+		[DataMember(Name = "a", EmitDefaultValue = false)]
+		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+		[JsonPropertyName("a")]
+		public string? JsonPatchPath { get; set; }
+
+		/// <summary>
 		/// The path of the data to update.
 		/// </summary>
 		/// <remarks>
-		/// Note that that concise name &quot;j&quot; is used for serialization as supported by the <a href="https://github.com/microsoft/object-basin">object-basin</a> library.
+		/// Note that that concise name &quot;j&quot; is used for serialization.
 		/// </remarks>
 		[DataMember(Name = "j", EmitDefaultValue = false)]
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -27,7 +39,7 @@
 		/// Currently only <tt>null</tt> is supported to mean to append to the end of a string.
 		/// </summary>
 		/// <remarks>
-		/// Note that that concise name &quot;p&quot; is used for serialization as supported by the <a href="https://github.com/microsoft/object-basin">object-basin</a> library.
+		/// Note that that concise name &quot;p&quot; is used for serialization.
 		/// </remarks>
 		[DataMember(Name = "p", EmitDefaultValue = false)]
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
@@ -38,7 +50,7 @@
 		/// The number of items to delete starting from <see cref="Position"/>.
 		/// </summary>
 		/// <remarks>
-		/// Note that that concise name &quot;d&quot; is used for serialization as supported by the <a href="https://github.com/microsoft/object-basin">object-basin</a> library.
+		/// Note that that concise name &quot;d&quot; is used for serialization.
 		/// </remarks>
 		[DataMember(Name = "d", EmitDefaultValue = false)]
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]

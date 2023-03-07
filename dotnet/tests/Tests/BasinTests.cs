@@ -8,11 +8,11 @@ namespace Tests
 		[TestMethod]
 		public void StringTests()
 		{
-			var basin = new Basin<string>(new Dictionary<string, string> { });
+			var basin = new Basin<string>();
 			const string key = "key";
 			basin.SetCursor(new BasinCursor { JsonPath = $"$['{key}']" });
 			Assert.AreEqual("2", basin.Write("2"));
-			Assert.AreEqual("TODO", basin.Items);
+			Assert.AreEqual("2", basin.Items[key]);
 		}
 	}
 }
