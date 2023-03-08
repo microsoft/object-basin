@@ -53,6 +53,8 @@ export class Basin<T> {
 		}
 	}
 
+	// TODO Support JSON Patch paths like we will in .NET.
+
 	/**
 	 * @param cursor The cursor to use.
 	 */
@@ -70,8 +72,6 @@ export class Basin<T> {
 			cursor.deleteCount = cursor.d
 			delete cursor.d
 		}
-
-		// TODO Use JSON Patch paths like we will in .NET.
 
 		const expressions = jp.parse(cursor.jsonPath!)
 		for (const expression of expressions) {
@@ -93,7 +93,6 @@ export class Basin<T> {
 		const cursor = this._cursor!
 		const position = cursor.position
 
-		// TODO Use JSON Patch paths like we will in .NET.
 		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.

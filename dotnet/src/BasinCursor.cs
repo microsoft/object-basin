@@ -12,8 +12,7 @@
 	public class BasinCursor
 	{
 		/// <summary>
-		/// The JSON Patch path of the data to update.
-		/// Learn more about JSON Patch at <a href="https://jsonpatch.com/">jsonpatch.com/</a>.
+		/// The JSONPath to the value to be updated.
 		/// </summary>
 		/// <remarks>
 		/// Note that that concise name &quot;j&quot; is used for serialization.
@@ -21,10 +20,10 @@
 		[DataMember(Name = "j", EmitDefaultValue = false)]
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
 		[JsonPropertyName("j")]
-		public string? Path { get; set; }
+		public string? JsonPath { get; set; }
 
 		/// <summary>
-		/// The position at <see cref="Path"/> to update.
+		/// The position at <see cref="JsonPath"/> to update.
 		/// Currently only <tt>null</tt> is supported to mean to append to the end of a string.
 		/// </summary>
 		/// <remarks>
