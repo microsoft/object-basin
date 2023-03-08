@@ -26,44 +26,56 @@
 			this.cursor = cursor;
 
 #if DEBUG
-			if (cursor?.JsonPath == null)
+			if (cursor?.Path == null)
 			{
 				throw new ArgumentException("The cursor or its JsonPath is null.");
 			}
 #endif
 
-			// TODO Handle more cases, clean-up, and make a more efficient.
-			if (cursor.JsonPath.StartsWith("/", StringComparison.Ordinal))
+			int startIndex;
+			if (cursor.Path.StartsWith("/", StringComparison.Ordinal))
 			{
-				var startIndex = 1;
-				var endIndex = cursor.JsonPath.IndexOf("/", startIndex + 1);
-				if (endIndex == -1)
-				{
-					endIndex = cursor.JsonPath.Length;
-				}
-				
-				this.currentKey = cursor.JsonPath[startIndex..endIndex]
-					.Replace("~1", "/")
-					.Replace("~0", "~");
+				startIndex = 1;
 			}
+			else
+			{
+				startIndex = 0;
+			}
+
+			var endIndex = cursor.Path.IndexOf("/", startIndex + 1);
+			if (endIndex == -1)
+			{
+				endIndex = cursor.Path.Length;
+			}
+
+			this.currentKey = cursor.Path[startIndex..endIndex]
+				.Replace("~1", "/")
+				.Replace("~0", "~");
 		}
 
 		public ValueType Write(object value)
 		{
 #if DEBUG
-			if (this.cursor?.JsonPath == null)
+			if (this.cursor?.Path == null)
 			{
 				throw new ArgumentException("The cursor or its JsonPath is null.");
 			}
 #endif
-			var path = this.cursor.JsonPath;
+			var path = this.cursor.Path;
 			var pos = this.cursor.Position;
 			if (pos == null)
 			{
 				// Set the value.
-				var j = new JsonPatchDocument();
-				j.Add(path, value);
-				j.ApplyTo(this.Items);
+				// TODO Maybe we should be more efficient and create the operation manually so that the list of operation can remain with size 1 instead of getting resized or starting larger.
+				// Maybe we should set this up when setting up the cursor.
+				new JsonPatchDocument()
+					.Add(path, value)
+					.ApplyTo(this.Items);
+			}
+			else
+			{
+				// TODO
+				var j = new JsonPatchDocument<IDictionary<string, ValueType>>();
 			}
 
 			return this.Items[this.currentKey!];

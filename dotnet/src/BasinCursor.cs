@@ -21,10 +21,10 @@
 		[DataMember(Name = "j", EmitDefaultValue = false)]
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
 		[JsonPropertyName("j")]
-		public string? JsonPath { get; set; }
+		public string? Path { get; set; }
 
 		/// <summary>
-		/// The position at <see cref="JsonPath"/> to update.
+		/// The position at <see cref="Path"/> to update.
 		/// Currently only <tt>null</tt> is supported to mean to append to the end of a string.
 		/// </summary>
 		/// <remarks>

@@ -60,13 +60,18 @@ export class Basin<T> {
 		this._cursor = cursor
 		if (cursor.j !== undefined) {
 			cursor.jsonPath = cursor.j
+			delete cursor.j
 		}
 		if (cursor.p !== undefined) {
 			cursor.position = cursor.p
+			delete cursor.p
 		}
 		if (cursor.d !== undefined) {
 			cursor.deleteCount = cursor.d
+			delete cursor.d
 		}
+
+		// TODO Use JSON Patch paths like we will in .NET.
 
 		const expressions = jp.parse(cursor.jsonPath!)
 		for (const expression of expressions) {
@@ -87,6 +92,8 @@ export class Basin<T> {
 		// For efficiency, assume the cursor is set.
 		const cursor = this._cursor!
 		const position = cursor.position
+
+		// TODO Use JSON Patch paths like we will in .NET.
 		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.
