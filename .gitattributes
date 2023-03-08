@@ -1,6 +1,7 @@
 *.gitattributes text eol=lf
 *.gitignore text eol=lf
 
+.editorconfig text eol=lf
 .eslintignore
 
 LICENSE text eol=lf
