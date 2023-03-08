@@ -12,19 +12,8 @@
 	public class BasinCursor
 	{
 		/// <summary>
-		/// JSON Patch path.
+		/// The JSON Patch path of the data to update.
 		/// Learn more about JSON Patch at <a href="https://jsonpatch.com/">jsonpatch.com/</a>.
-		/// </summary>
-		/// <remarks>
-		/// Note that that concise name &quot;a&quot; is used for serialization.
-		/// </remarks>
-		[DataMember(Name = "a", EmitDefaultValue = false)]
-		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-		[JsonPropertyName("a")]
-		public string? JsonPatchPath { get; set; }
-
-		/// <summary>
-		/// The path of the data to update.
 		/// </summary>
 		/// <remarks>
 		/// Note that that concise name &quot;j&quot; is used for serialization.

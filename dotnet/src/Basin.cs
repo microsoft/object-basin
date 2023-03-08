@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using Microsoft.AspNetCore.JsonPatch;
 	using Newtonsoft.Json.Linq;
 
 	/// <summary>
@@ -9,10 +10,9 @@
 	/// </summary>
 	/// <typeparam name="ValueType">The type of values (top level) that will be modified.</typeparam>
 	public class Basin<ValueType>
-		where ValueType : class
 	{
 		private BasinCursor? cursor;
-		private string currentKey;
+		private string? currentKey;
 
 		public Basin(IDictionary<string, ValueType>? items = null)
 		{
@@ -33,11 +33,18 @@
 #endif
 
 			// TODO Handle more cases, clean-up, and make a more efficient.
-			if (cursor.JsonPath.StartsWith("$['", StringComparison.Ordinal))
+			if (cursor.JsonPath.StartsWith("/", StringComparison.Ordinal))
 			{
-				var startIndex = 3;
-				var endIndex = cursor.JsonPath.IndexOf("']", startIndex + 1);
-				this.currentKey = cursor.JsonPath[startIndex..endIndex];
+				var startIndex = 1;
+				var endIndex = cursor.JsonPath.IndexOf("/", startIndex + 1);
+				if (endIndex == -1)
+				{
+					endIndex = cursor.JsonPath.Length;
+				}
+				
+				this.currentKey = cursor.JsonPath[startIndex..endIndex]
+					.Replace("~1", "/")
+					.Replace("~0", "~");
 			}
 		}
 
@@ -54,23 +61,12 @@
 			if (pos == null)
 			{
 				// Set the value.
-				var obj = JToken.FromObject(this.Items);
-				var found = false;
-				foreach (var token in obj.SelectTokens(path))
-				{
-					found = true;
-					token.Replace(JToken.FromObject(value));
-				}
-				// JToken.Parse("dd")
-				if (!found)
-				{
-					obj.Sel
-				}
-				
+				var j = new JsonPatchDocument();
+				j.Add(path, value);
+				j.ApplyTo(this.Items);
 			}
 
-			// TODO JObject.FromObject(this.Items).SelectTokens
-			return this.Items[this.currentKey];
+			return this.Items[this.currentKey!];
 		}
 	}
 }
