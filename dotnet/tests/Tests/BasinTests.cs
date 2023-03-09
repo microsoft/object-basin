@@ -1,5 +1,7 @@
 namespace ObjectBasin.Tests
 {
+	using System.Collections;
+	using Newtonsoft.Json;
 	using ObjectBasin;
 
 	[TestClass]
@@ -32,6 +34,34 @@ namespace ObjectBasin.Tests
 		}
 
 		[TestMethod]
+		public void ObjectTests()
+		{
+			var basin = new Basin<object>();
+			const string key = "key";
+			basin.SetCursor(new BasinCursor { JsonPath = $"$.['{key}']" });
+			var expected = new Dictionary<string, object> { ["a"] = 1, };
+			CollectionAssert.AreEquivalent(expected, (ICollection)basin.Write(new Dictionary<string, object> { ["a"] = 1, }));
+			CollectionAssert.AreEquivalent(expected, (ICollection)basin.Items[key]);
+
+			basin.SetCursor(new BasinCursor { JsonPath = $"{key}.b" });
+			expected["b"] = new List<object> { new Dictionary<string, object> { ["t"] = "h" } };
+			AssertAreDeepEqual(expected, basin.Write(new List<object> { new Dictionary<string, object> { ["t"] = "h" } }));
+		}
+
+		[DataRow("/key/", "key")]
+		[DataRow("/key/", "$.['key']")]
+		[DataRow("/key/", "$.[key]")]
+		[DataRow("/key/", "$.key")]
+		[DataRow("/key/", "$['key']")]
+		[DataRow("/key/", "$[key]")]
+		[DataRow("/key/", "$key")]
+		[TestMethod]
+		public void PathConverionTests(string expected, string input)
+		{
+			Assert.AreEqual(expected, Basin<object>.ConvertJsonPathToJsonPatchPath(input));
+		}
+
+		[TestMethod]
 		public void StringTests()
 		{
 			var basin = new Basin<string>();
@@ -47,19 +77,9 @@ namespace ObjectBasin.Tests
 			Assert.AreEqual("4", basin.Items["o/k"]);
 		}
 
-
-
-		[DataRow("/key/", "key")]
-		[DataRow("/key/", "$.['key']")]
-		[DataRow("/key/", "$.[key]")]
-		[DataRow("/key/", "$.key")]
-		[DataRow("/key/", "$['key']")]
-		[DataRow("/key/", "$[key]")]
-		[DataRow("/key/", "$key")]
-		[TestMethod]
-		public void PathConverionTests(string expected, string input)
+		private static void AssertAreDeepEqual(object expected, object actual)
 		{
-			Assert.AreEqual(expected, Basin<object>.ConvertJsonPathToJsonPatchPath(input));
+			Assert.AreEqual(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(actual));
 		}
 	}
 }

@@ -21,6 +21,7 @@
 			("$[", "]" ),
 			("$.", "<end>" ),
 			(".", "<end>" ),
+			("", "." ),
 		};
 		private BasinCursor? cursor;
 		private string? currentKey;
@@ -129,7 +130,7 @@
 							this.ApplyPatch(new Operation("add", this.currentPointer, null, newValue));
 							break;
 						default:
-							throw new Exception("Not handled.");
+							throw new Exception($"Token of type  {token.Type} cannot be modified yet.");
 					}
 				}
 				var j = new JsonPatchDocument<IDictionary<string, ValueType>>();
