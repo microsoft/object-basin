@@ -16,7 +16,7 @@ namespace ObjectBasin.Tests
 			Assert.AreEqual("ello World!", basin.Write("!"));
 			Assert.AreEqual("ello World!", basin.Items["message"]);
 
-			basin.SetCursor(new BasinCursor { JsonPath = "messsage", Position = 0 });
+			basin.SetCursor(new BasinCursor { JsonPath = "message", Position = 0 });
 			Assert.AreEqual("Hello World!", basin.Write("H"));
 			Assert.AreEqual("Hello World!", basin.Items["message"]);
 		}

@@ -4,6 +4,7 @@
 	using System.Collections.Generic;
 	using Microsoft.AspNetCore.JsonPatch;
 	using Microsoft.AspNetCore.JsonPatch.Operations;
+	using Newtonsoft.Json.Linq;
 	using Newtonsoft.Json.Serialization;
 
 	/// <summary>
@@ -23,6 +24,10 @@
 		};
 		private BasinCursor? cursor;
 		private string? currentKey;
+		/// <summary>
+		/// The JSON Patch pointer path.
+		/// </summary>
+		private string? currentPointer;
 
 		public Basin(IDictionary<string, ValueType>? items = null)
 		{
@@ -50,7 +55,7 @@
 #if DEBUG
 			if (cursor?.JsonPath == null)
 			{
-				throw new ArgumentException("The cursor or its JsonPath is null.");
+				throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 			}
 #endif
 			this.currentKey = null;
@@ -74,6 +79,8 @@
 			{
 				this.currentKey = cursor.JsonPath;
 			}
+
+			this.currentPointer = ConvertJsonPathToJsonPatchPath(cursor.JsonPath);
 		}
 
 		public ValueType Write(object value)
@@ -81,7 +88,7 @@
 #if DEBUG
 			if (this.cursor?.JsonPath == null)
 			{
-				throw new ArgumentException("The cursor or its JsonPath is null.");
+				throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 			}
 #endif
 			var path = this.cursor.JsonPath;
@@ -89,16 +96,42 @@
 			if (pos == null)
 			{
 				// Set the value.
-				path = ConvertJsonPathToJsonPatchPath(path);
 				// TODO Maybe we should be more efficient and create the operation manually so that the list of operation can remain with size 1 instead of getting resized or starting larger.
 				// Maybe we should set this up when setting up the cursor.
 				new JsonPatchDocument()
-					.Add(path, value)
+					.Add(this.currentPointer, value)
 					.ApplyTo(this.Items);
 			}
 			else
 			{
-				// TODO
+				// Get the value at the path.
+				var obj = JObject.FromObject(this.Items);
+				foreach (var token in obj.SelectTokens(path))
+				{
+					switch (token.Type)
+					{
+						case JTokenType.String:
+							string newValue;
+							var currentValue = token.ToString();
+							if (pos == -1)
+							{
+								// Append
+								newValue = currentValue + value;
+							}
+							else
+							{
+								// Insert
+								this.cursor.Position += (value as string)!.Length;
+								var deleteCount = this.cursor.DeleteCount ?? 0;
+								newValue = currentValue[0..pos.Value] + value + currentValue[(pos.Value + deleteCount)..];
+							}
+
+							this.ApplyPatch(new Operation("add", this.currentPointer, null, newValue));
+							break;
+						default:
+							throw new Exception("Not handled.");
+					}
+				}
 				var j = new JsonPatchDocument<IDictionary<string, ValueType>>();
 			}
 
@@ -132,7 +165,7 @@
 				result = "/" + result;
 			}
 
-			if(!result.EndsWith("/", StringComparison.Ordinal))
+			if (!result.EndsWith("/", StringComparison.Ordinal))
 			{
 				result += "/";
 			}
