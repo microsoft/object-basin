@@ -40,9 +40,8 @@ describe('Basin', () => {
 		expect(basin.items[key]).to.deep.equal({ a: 1, b: [{ t: 'h' }] })
 		basin.setCursor({ jsonPath: '$[\'key\'].b[0].t', position: -1 })
 		basin.write('el')
-		let o = basin.write('lo')
+		expect(basin.write('lo')).to.deep.equal({ a: 1, b: [{ t: 'hello' }] })
 		expect(basin.items[key]).to.deep.equal({ a: 1, b: [{ t: 'hello' }] })
-		expect(o).to.deep.equal({ a: 1, b: [{ t: 'hello' }] })
 	})
 
 	it('example', () => {

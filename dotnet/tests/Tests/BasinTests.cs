@@ -46,6 +46,13 @@ namespace ObjectBasin.Tests
 			basin.SetCursor(new BasinCursor { JsonPath = $"{key}.b" });
 			expected["b"] = new List<object> { new Dictionary<string, object> { ["t"] = "h" } };
 			AssertAreDeepEqual(expected, basin.Write(new List<object> { new Dictionary<string, object> { ["t"] = "h" } }));
+
+			basin.SetCursor(new BasinCursor { JsonPath = $"{key}.b.[0].t", Position = -1 });
+			basin.Write("el");
+			basin.Write("lo");
+			expected["b"] = new List<object> { new Dictionary<string, object> { ["t"] = "hello" } };
+			AssertAreDeepEqual(expected, basin.Items[key]);
+
 		}
 
 		[DataRow("/key/", "key")]
@@ -55,6 +62,8 @@ namespace ObjectBasin.Tests
 		[DataRow("/key/", "$['key']")]
 		[DataRow("/key/", "$[key]")]
 		[DataRow("/key/", "$key")]
+		[DataRow("/key/b/0/t/", "key.b.[0].t")]
+		// FIXME [DataRow("/key/b/0/t/", "key.b[0].t")]
 		[TestMethod]
 		public void PathConverionTests(string expected, string input)
 		{
