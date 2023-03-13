@@ -4,6 +4,7 @@
 	using System.Collections.Generic;
 	using System.Text;
 	using Microsoft.AspNetCore.JsonPatch;
+	using Microsoft.AspNetCore.JsonPatch.Exceptions;
 	using Microsoft.AspNetCore.JsonPatch.Operations;
 	using Newtonsoft.Json.Linq;
 	using Newtonsoft.Json.Serialization;
@@ -84,9 +85,24 @@
 			{
 				// Set the value.
 				// TODO Maybe we should be more efficient and create the operation manually so that the list of operation can remain with size 1 instead of getting resized or starting larger.
-				new JsonPatchDocument()
-					.Add(this.currentPointer, value)
-					.ApplyTo(this.Items);
+				try
+				{
+					new JsonPatchDocument()
+						.Replace(this.currentPointer, value)
+						.ApplyTo(this.Items);
+				}
+				catch (JsonPatchException exc)
+				{
+					if (exc.Message.Contains("not found", StringComparison.Ordinal))
+					{
+						new JsonPatchDocument()
+							.Add(this.currentPointer, value)
+							.ApplyTo(this.Items);
+					} else
+					{
+						throw;
+					}
+				}
 			}
 			else
 			{

@@ -49,10 +49,20 @@ namespace ObjectBasin.Tests
 			};
 			AssertAreDeepEqual(expected, basin.Items);
 
-			expected = (Dictionary<string, object>)expected["object"];
-			expected["list"] = new List<object> { "item 1", "item 2 is the best" };
+			expected = new Dictionary<string, object>
+			{
+				["list"] = new List<object> { "item 1", "item 2 is the best" },
+			};
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]", Position = -1 });
 			AssertAreDeepEqual(expected, basin.Write(" is the best"));
+
+			((List<object>)expected["list"]).Insert(1, "item 1.5");
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = 1 });
+			AssertAreDeepEqual(expected, basin.Write("item 1.5"));
+
+			((List<object>)expected["list"])[1] = "item 1.33";
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]"});
+			AssertAreDeepEqual(expected, basin.Write("item 1.33"));
 
 
 		}
