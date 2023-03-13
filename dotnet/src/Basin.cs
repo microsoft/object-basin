@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Text;
 	using Microsoft.AspNetCore.JsonPatch;
 	using Microsoft.AspNetCore.JsonPatch.Operations;
 	using Newtonsoft.Json.Linq;
@@ -11,6 +12,9 @@
 	/// A container for objects that you can write to using a JSONPath cursor.
 	/// </summary>
 	/// <typeparam name="ValueType">The type of values (top level) that will be modified.</typeparam>
+	/// <remarks>
+	/// See <see cref="ConvertJsonPathToJsonPointer"/> for assumptions about JSONPaths.
+	/// </remarks>
 	public class Basin<ValueType>
 	{
 		private static readonly IEnumerable<(string, string)> KeyMarkers = new List<(string, string)>
@@ -39,12 +43,14 @@
 
 		public void ApplyPatch(Operation operation)
 		{
+			// TODO Return the top level object that was modified.
 			new JsonPatchDocument(new List<Operation>() { operation }, new DefaultContractResolver())
 				.ApplyTo(this.Items);
 		}
 
 		public void ApplyPatches(List<Operation> operations)
 		{
+			// TODO Return the top level objects that were modified without duplicates.
 			new JsonPatchDocument(operations, new DefaultContractResolver())
 				.ApplyTo(this.Items);
 		}
@@ -81,7 +87,7 @@
 				this.currentKey = cursor.JsonPath;
 			}
 
-			this.currentPointer = ConvertJsonPathToJsonPatchPath(cursor.JsonPath);
+			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath);
 		}
 
 		public ValueType Write(object value)
@@ -140,44 +146,43 @@
 		}
 
 		/// <summary>
-		/// 
+		/// Convert a JSONPath to a JSON Pointer.
 		/// </summary>
-		/// <param name="path"></param>
-		/// <returns></returns>
+		/// <param name="path">A JSONPath.</param>
+		/// <returns>A JSON Pointer</returns>
 		/// <remarks>
 		/// Exposed for testing.
+		/// ASSUMPTION: Only handles simple cases. E.g., key names cannot have &quot;[&quot; or &quot;]&quot;.
 		/// </remarks>
-		public static string ConvertJsonPathToJsonPatchPath(string path)
+		public static string ConvertJsonPathToJsonPointer(string path)
 		{
-			// Only handle some simple cases.
-			// Requires dots.
-			string result = path
+			// TODO Optimize to only go through the path once.
+			var resultBuilder = new StringBuilder(path);
+			resultBuilder
 				.Replace("~", "~0")
 				.Replace("/", "~1")
 				.Replace(".", "/");
 
-			if (result.StartsWith("$", StringComparison.Ordinal))
+			if (resultBuilder[0] == '$')
 			{
-				result = result[1..];
+				resultBuilder.Remove(0, 1);
 			}
 
-			if (!result.StartsWith("/", StringComparison.Ordinal))
+			if (resultBuilder[0] != '/')
 			{
-				result = "/" + result;
+				resultBuilder.Insert(0, '/');
 			}
 
-			if (!result.EndsWith("/", StringComparison.Ordinal))
-			{
-				result += "/";
-			}
-
-			result = result
+			resultBuilder
 				.Replace("/['", "/")
 				.Replace("']/", "/")
 				.Replace("]/", "/")
-				.Replace("/[", "/");
+				.Replace("/[", "/")
+				.Replace("[", "/")
+				.Replace("']", "")
+				.Replace("]", "");
 
-			return result;
+			return resultBuilder.ToString();
 		}
 	}
 }

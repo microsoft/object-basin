@@ -52,22 +52,22 @@ namespace ObjectBasin.Tests
 			basin.Write("lo");
 			expected["b"] = new List<object> { new Dictionary<string, object> { ["t"] = "hello" } };
 			AssertAreDeepEqual(expected, basin.Items[key]);
-
 		}
 
-		[DataRow("/key/", "key")]
-		[DataRow("/key/", "$.['key']")]
-		[DataRow("/key/", "$.[key]")]
-		[DataRow("/key/", "$.key")]
-		[DataRow("/key/", "$['key']")]
-		[DataRow("/key/", "$[key]")]
-		[DataRow("/key/", "$key")]
-		[DataRow("/key/b/0/t/", "key.b.[0].t")]
-		// FIXME [DataRow("/key/b/0/t/", "key.b[0].t")]
+		[DataRow("/key", "key")]
+		[DataRow("/key", "$.['key']")]
+		[DataRow("/key", "$.[key]")]
+		[DataRow("/key", "$.key")]
+		[DataRow("/key", "$['key']")]
+		[DataRow("/key", "$[key]")]
+		[DataRow("/key", "$key")]
+		[DataRow("/key/b/0/t", "key.b.[0].t")]
+		[DataRow("/key/b/0/t", "key.b[0].t")]
+		[DataRow("/key/b/0/t/1/s", "key.b[0].t[1].s")]
 		[TestMethod]
 		public void PathConverionTests(string expected, string input)
 		{
-			Assert.AreEqual(expected, Basin<object>.ConvertJsonPathToJsonPatchPath(input));
+			Assert.AreEqual(expected, Basin<object>.ConvertJsonPathToJsonPointer(input));
 		}
 
 		[TestMethod]
