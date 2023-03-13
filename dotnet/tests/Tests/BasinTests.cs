@@ -73,6 +73,29 @@ namespace ObjectBasin.Tests
 			((List<object>)expected["list"]).Add("item 5");
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = -1 });
 			AssertAreDeepEqual(expected, basin.Write("item 5"));
+
+			((List<object>)expected["list"]).RemoveAt(0);
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = 0, DeleteCount = 1 });
+			AssertAreDeepEqual(expected, basin.Write(0));
+
+			((List<object>)expected["list"]).RemoveAt(1);
+			((List<object>)expected["list"]).RemoveAt(1);
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = 1, DeleteCount = 2 });
+			AssertAreDeepEqual(expected, basin.Write(0));
+
+			((List<object>)expected["list"])[0] = "item 1!";
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list[0]", Position = 6, DeleteCount = 3 });
+			AssertAreDeepEqual(expected, basin.Write("!"));
+
+			expected = new Dictionary<string, object>
+			{
+				["message"] = "Hello World! It's nice to stream to you.",
+				["object"] = new Dictionary<string, object>
+				{
+					["list"] = new List<object> { "item 1!", "item 4", "item 5" },
+				},
+			};
+			AssertAreDeepEqual(expected, basin.Items);
 		}
 
 		[TestMethod]

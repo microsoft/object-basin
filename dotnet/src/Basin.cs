@@ -98,7 +98,8 @@
 						new JsonPatchDocument()
 							.Add(this.currentPointer, value)
 							.ApplyTo(this.Items);
-					} else
+					}
+					else
 					{
 						throw;
 					}
@@ -113,39 +114,10 @@
 					switch (token.Type)
 					{
 						case JTokenType.String:
-							string newValue;
-							var currentValue = token.ToString();
-							if (pos == -1)
-							{
-								// Append
-								newValue = currentValue + value;
-							}
-							else
-							{
-								// Insert
-								this.cursor.Position += (value as string)!.Length;
-								var deleteCount = this.cursor.DeleteCount ?? 0;
-								newValue = currentValue[0..pos.Value] + value + currentValue[(pos.Value + deleteCount)..];
-							}
-
-							// Need to replace the string, otherwise we could end up inserting a new entry in a list.
-							// There are tests for this.
-							this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
+							this.HandleStringUpdate(value, pos, token);
 							break;
 						case JTokenType.Array:
-							var pointer = ConvertJsonPathToJsonPointer(token.Path);
-							if (pos == -1)
-							{
-								// Append
-								pointer += "/-";
-							}
-							else
-							{
-								// Insert
-								pointer += $"/{pos.Value}";
-							}
-
-							this.ApplyPatch(new Operation("add", pointer, null, value));
+							this.HandleArrayUpdate(value, pos, token);
 							break;
 						default:
 							throw new Exception($"Token of type  {token.Type} cannot be modified yet.");
@@ -195,6 +167,57 @@
 				.Replace("]", "");
 
 			return resultBuilder.ToString();
+		}
+
+		private void HandleArrayUpdate(object value, int? pos, JToken token)
+		{
+			var deleteCount = this.cursor!.DeleteCount;
+			var pointer = ConvertJsonPathToJsonPointer(token.Path);
+			if (deleteCount != null)
+			{
+				pointer += $"/{pos!.Value}";
+				var ops = new List<Operation>(deleteCount.Value);
+				for (int i = 0; i < deleteCount.Value; ++i)
+				{
+					ops.Add(new Operation("remove", pointer, null));
+				}
+				this.ApplyPatches(ops);
+			}
+			else if (pos == -1)
+			{
+				// Append
+				pointer += "/-";
+				this.ApplyPatch(new Operation("add", pointer, null, value));
+			}
+			else
+			{
+				// Insert
+				pointer += $"/{pos!.Value}";
+				this.ApplyPatch(new Operation("add", pointer, null, value));
+			}
+		}
+
+		private int? HandleStringUpdate(object value, int? pos, JToken token)
+		{
+			var deleteCount = this.cursor!.DeleteCount;
+			string newValue;
+			var currentValue = token.ToString();
+			if (pos == -1)
+			{
+				// Append
+				newValue = currentValue + value;
+			}
+			else
+			{
+				// Insert
+				this.cursor.Position += (value as string)!.Length;
+				newValue = currentValue[0..pos!.Value] + value + currentValue[(pos.Value + (deleteCount ?? 0))..];
+			}
+
+			// Need to replace the string, otherwise we could end up inserting a new entry in a list.
+			// There are tests for this.
+			this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
+			return deleteCount;
 		}
 	}
 }
