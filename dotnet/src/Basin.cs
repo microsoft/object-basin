@@ -17,16 +17,6 @@
 	/// </remarks>
 	public class Basin<ValueType>
 	{
-		private static readonly IEnumerable<(string, string)> KeyMarkers = new List<(string, string)>
-		{
-			("$.['", "']" ),
-			("$['", "']" ),
-			("$.[", "]" ),
-			("$[", "]" ),
-			("$.", "<end>" ),
-			(".", "<end>" ),
-			("", "." ),
-		};
 		private BasinCursor? cursor;
 		private string? currentKey;
 		/// <summary>
@@ -65,29 +55,19 @@
 				throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 			}
 #endif
-			this.currentKey = null;
-			foreach (var pair in KeyMarkers)
-			{
-				if (cursor.JsonPath.StartsWith(pair.Item1, StringComparison.Ordinal))
-				{
-					var startIndex = pair.Item1.Length;
-					var endIndex = cursor.JsonPath.IndexOf(pair.Item2, startIndex + 1);
-					if (endIndex == -1)
-					{
-						endIndex = cursor.JsonPath.Length;
-					}
-
-					this.currentKey = cursor.JsonPath[startIndex..endIndex];
-					break;
-				}
-			}
-
-			if (this.currentKey == null)
-			{
-				this.currentKey = cursor.JsonPath;
-			}
-
 			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath);
+
+			var endIndex = this.currentPointer.IndexOf('/', 1);
+			endIndex = endIndex == -1 ? this.currentPointer.Length : endIndex;
+			var currentKeyBuilder = new StringBuilder(this.currentPointer);
+
+			// Remove the first "/".
+			currentKeyBuilder
+				.Remove(0, 1)
+				.Remove(endIndex - 1, currentKeyBuilder.Length - endIndex + 1)
+				.Replace("~0", "~")
+				.Replace("~1", "/");
+			this.currentKey = currentKeyBuilder.ToString();
 		}
 
 		public ValueType Write(object value)
@@ -104,7 +84,6 @@
 			{
 				// Set the value.
 				// TODO Maybe we should be more efficient and create the operation manually so that the list of operation can remain with size 1 instead of getting resized or starting larger.
-				// Maybe we should set this up when setting up the cursor.
 				new JsonPatchDocument()
 					.Add(this.currentPointer, value)
 					.ApplyTo(this.Items);
@@ -133,7 +112,24 @@
 								newValue = currentValue[0..pos.Value] + value + currentValue[(pos.Value + deleteCount)..];
 							}
 
-							this.ApplyPatch(new Operation("add", this.currentPointer, null, newValue));
+							// Need to replace the string, otherwise we could end up inserting a new entry in a list.
+							// There are tests for this.
+							this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
+							break;
+						case JTokenType.Array:
+							var pointer = ConvertJsonPathToJsonPointer(token.Path);
+							if (pos == -1)
+							{
+								// Append
+								pointer += "/-";
+							}
+							else
+							{
+								// Insert
+								pointer += $"/{pos.Value}";
+							}
+
+							this.ApplyPatch(new Operation("add", pointer, null, value));
 							break;
 						default:
 							throw new Exception($"Token of type  {token.Type} cannot be modified yet.");

@@ -48,6 +48,13 @@ namespace ObjectBasin.Tests
 				["object"] = expected,
 			};
 			AssertAreDeepEqual(expected, basin.Items);
+
+			expected = (Dictionary<string, object>)expected["object"];
+			expected["list"] = new List<object> { "item 1", "item 2 is the best" };
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]", Position = -1 });
+			AssertAreDeepEqual(expected, basin.Write(" is the best"));
+
+
 		}
 
 		[TestMethod]
@@ -108,9 +115,19 @@ namespace ObjectBasin.Tests
 			Assert.AreEqual("3", basin.Write("3"));
 			Assert.AreEqual("3", basin.Items[key]);
 
-			basin.SetCursor(new BasinCursor { JsonPath = $"$.[o/k]" });
+			basin.SetCursor(new BasinCursor { JsonPath = "$.[o/k]" });
 			Assert.AreEqual("4", basin.Write("4"));
 			Assert.AreEqual("4", basin.Items["o/k"]);
+		}
+
+		[TestMethod]
+		public void StringInListTests()
+		{
+			var basin = new Basin<object>();
+			basin.SetCursor(new BasinCursor { JsonPath = "$.list" });
+			basin.Write(new List<string> { "item 1" });
+			basin.SetCursor(new BasinCursor { JsonPath = "list[0]" });
+			basin.Write("1");
 		}
 
 		private static void AssertAreDeepEqual(object expected, object actual)
