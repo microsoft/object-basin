@@ -64,7 +64,15 @@ namespace ObjectBasin.Tests
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]"});
 			AssertAreDeepEqual(expected, basin.Write("item 1.33"));
 
-
+			((List<object>)expected["list"]).Add("item 3");
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = -1 });
+			AssertAreDeepEqual(expected, basin.Write("item 3"));
+			((List<object>)expected["list"]).Add("item 4");
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = -1 });
+			AssertAreDeepEqual(expected, basin.Write("item 4"));
+			((List<object>)expected["list"]).Add("item 5");
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = -1 });
+			AssertAreDeepEqual(expected, basin.Write("item 5"));
 		}
 
 		[TestMethod]
