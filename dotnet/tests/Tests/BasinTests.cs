@@ -61,7 +61,7 @@ namespace ObjectBasin.Tests
 			AssertAreDeepEqual(expected, basin.Write("item 1.5"));
 
 			((List<object>)expected["list"])[1] = "item 1.33";
-			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]"});
+			basin.SetCursor(new BasinCursor { JsonPath = "object.list[1]" });
 			AssertAreDeepEqual(expected, basin.Write("item 1.33"));
 
 			((List<object>)expected["list"]).Add("item 3");
