@@ -1,6 +1,7 @@
 namespace ObjectBasin.Tests
 {
 	using System.Collections;
+	using System.Collections.Generic;
 	using Newtonsoft.Json;
 	using ObjectBasin;
 
@@ -10,6 +11,7 @@ namespace ObjectBasin.Tests
 		[TestMethod]
 		public void ExampleTests()
 		{
+			// Based on the example in the README.md.
 			var basin = new Basin<object>();
 			basin.SetCursor(new BasinCursor { JsonPath = "message" });
 			Assert.AreEqual("ello", basin.Write("ello"));
@@ -21,6 +23,31 @@ namespace ObjectBasin.Tests
 			basin.SetCursor(new BasinCursor { JsonPath = "message", Position = 0 });
 			Assert.AreEqual("Hello World!", basin.Write("H"));
 			Assert.AreEqual("Hello World!", basin.Items["message"]);
+
+			basin.SetCursor(new BasinCursor { JsonPath = "message", Position = -1 });
+			Assert.AreEqual("Hello World! It's", basin.Write(" It's"));
+			Assert.AreEqual("Hello World! It's nice ", basin.Write(" nice "));
+			Assert.AreEqual("Hello World! It's nice to stream", basin.Write("to stream"));
+			Assert.AreEqual("Hello World! It's nice to stream to you.", basin.Write(" to you."));
+
+			basin.SetCursor(new BasinCursor { JsonPath = "$.object" });
+			var expected = new Dictionary<string, object>
+			{
+				["list"] = new List<object> { "item 1" },
+			};
+			AssertAreDeepEqual(expected, basin.Write(new Dictionary<string, object>
+			{
+				["list"] = new List<object> { "item 1" },
+			}));
+			basin.SetCursor(new BasinCursor { JsonPath = "$.object.list", Position = -1 });
+			expected["list"] = new List<object> { "item 1", "item 2" };
+			AssertAreDeepEqual(expected, basin.Write("item 2"));
+			expected = new Dictionary<string, object>
+			{
+				["message"] = "Hello World! It's nice to stream to you.",
+				["object"] = expected,
+			};
+			AssertAreDeepEqual(expected, basin.Items);
 		}
 
 		[TestMethod]
