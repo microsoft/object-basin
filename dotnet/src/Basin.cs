@@ -25,13 +25,34 @@
 		/// </summary>
 		private string? currentPointer;
 
-		public Basin(IDictionary<string, ValueType>? items = null)
+		/// <summary>
+		/// Create a new basin.
+		/// </summary>
+		/// <param name="items">The items to contain. If not provided, an empty dictionary will be created.</param>
+		/// <param name="cursor">The cursor to use. If not provided, then it must be provided later by calling <see cref="SetCursor"/></param>
+		public Basin(
+			IDictionary<string, ValueType>? items = null,
+			BasinCursor? cursor = null)
 		{
 			this.Items = items ?? new Dictionary<string, ValueType>();
+			if (cursor != null)
+			{
+				this.SetCursor(cursor);
+			}
 		}
 
+		/// <summary>
+		/// The items held in this basin.
+		/// </summary>
 		public IDictionary<string, ValueType> Items { get; }
 
+		/// <summary>
+		/// Apply a patch.
+		/// </summary>
+		/// <param name="operation">The patch.</param>
+		/// <returns>
+		/// The current top level item that was modified.
+		/// </returns>
 		public ValueType ApplyPatch(Operation operation)
 		{
 			var key = GetTopLevelKey(operation.path);
@@ -40,6 +61,11 @@
 			return this.Items[key];
 		}
 
+		/// <summary>
+		/// Apply patches.
+		/// </summary>
+		/// <param name="operations">The patches</param>
+		/// <returns>The top level items that were modified.</returns>
 		public IEnumerable<ValueType> ApplyPatches(List<Operation> operations)
 		{
 			new JsonPatchDocument(operations, new DefaultContractResolver())
@@ -51,6 +77,10 @@
 				.ToArray();
 		}
 
+		/// <summary>
+		/// Set the cursor for future calls to <see cref="Write"/>.
+		/// </summary>
+		/// <param name="cursor">The cursor to use.</param>
 		public void SetCursor(BasinCursor cursor)
 		{
 			this.cursor = cursor;
@@ -64,6 +94,13 @@
 			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath);
 		}
 
+		/// <summary>
+		/// Write or set a value.
+		/// </summary>
+		/// <param name="value">The value to write or insert.
+		/// Ignored when deleting items from lists.
+		/// </param>
+		/// <returns>The current top level item that was modified.</returns>
 		public ValueType Write(object? value)
 		{
 			ValueType result = default;

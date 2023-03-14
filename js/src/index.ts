@@ -42,7 +42,7 @@ export class Basin<T> {
 	private _currentKey?: T
 
 	/**
-	 * @param items The items to contain. If not provided, an empty object will be used.
+	 * @param items The items to contain. If not provided, an empty object will be created.
 	 * @param _cursor The cursor to use. If not provided, then it must be provided later by calling {@link setCursor}.
 	 */
 	public constructor(
