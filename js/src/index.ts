@@ -92,7 +92,6 @@ export class Basin<T> {
 		// For efficiency, assume the cursor is set.
 		const cursor = this._cursor!
 		const position = cursor.position
-
 		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.
