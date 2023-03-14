@@ -139,17 +139,12 @@
 				var obj = JObject.FromObject(this.Items);
 				foreach (var token in obj.SelectTokens(path))
 				{
-					switch (token.Type)
+					result = token.Type switch
 					{
-						case JTokenType.String:
-							result = this.HandleStringUpdate(value, pos, token);
-							break;
-						case JTokenType.Array:
-							result = this.HandleArrayUpdate(value, pos, token);
-							break;
-						default:
-							throw new Exception($"Token of type  {token.Type} cannot be modified yet.");
-					}
+						JTokenType.String => this.HandleStringUpdate(value, pos, token),
+						JTokenType.Array => this.HandleArrayUpdate(value, pos, token),
+						_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
+					};
 				}
 			}
 
