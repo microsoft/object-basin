@@ -2,8 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
+    <PackageId>ObjectBasin</PackageId>
     <Version>0.1.0</Version>
+    <Authors>Justin D. Harris</Authors>
+    <Company>Microsoft</Company>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\juharri\workspace\TuringBot\object-basin\dotnet\src\.editorconfig" />
+    <EditorConfigFiles Remove="../.editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="C:\Users\juharri\workspace\TuringBot\object-basin\dotnet\src\.editorconfig" />
+    <None Include="../.editorconfig" />
+    <None Include="../README.md" />
   </ItemGroup>
 
 </Project>
