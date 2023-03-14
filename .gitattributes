@@ -12,5 +12,6 @@ LICENSE text eol=lf
 *.json text eol=lf
 *.lock text eol=lf
 *.md text eol=lf
+*.sln text eol=lf
 *.ts text eol=lf
 *.yml text eol=lf

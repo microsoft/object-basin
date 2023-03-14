@@ -39,8 +39,7 @@ dotnet format --severity info --no-restore *.sln
 ## Publishing
 From the dotnet folder in the root of the repo, run:
 ```bash
-$version=<get the version number>
 $api_key=<your NuGet API key>
 dotnet pack --configuration Release
-dotnet nuget push src/bin/Release/ObjectBasin.$version.nupkg --source https://api.nuget.org/v3/index.json -k $api_key
+dotnet nuget push src/bin/Release/ObjectBasin.*.nupkg --source https://api.nuget.org/v3/index.json -k $api_key --skip-duplicate
 ```
