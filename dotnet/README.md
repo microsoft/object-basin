@@ -1,5 +1,5 @@
 # ObjectBasin
-.NET library to stream updates to an object.
+.NET library to stream updates to an object using JSONPaths and JSON Patch Pointers.
 It is called Basin because streams flow into a basin.
 
 See in [NuGet](https://www.nuget.org/packages/ObjectBasin).

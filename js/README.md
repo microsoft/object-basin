@@ -1,5 +1,5 @@
 # Basin
-JavaScript/TypeScript library to stream updates to an object.
+JavaScript/TypeScript library to stream updates to an object using JSONPaths.
 It is called Basin because streams flow into a basin.
 
 See in [npmjs.com](https://www.npmjs.com/package/object-basin).

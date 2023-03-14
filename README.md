@@ -1,5 +1,5 @@
 # Basin
-A specification and libraries to stream updates to an object.
+A specification and libraries to stream updates to an object using JSONPaths.
 We use the term "basin" because streams flow into a basin.
 
 See in [npmjs.com](https://www.npmjs.com/package/object-basin).
