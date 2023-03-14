@@ -80,13 +80,14 @@
 				// Set the value.
 				try
 				{
+					// Need to try to replace first, otherwise a JSONPath like "object.list[1]" would insert a new entry in the list.
 					result = this.ApplyPatch(new Operation("replace", this.currentPointer, null, value));
 				}
 				catch (JsonPatchException exc)
 				{
-					// The location did not exist.
-					if (exc.Message.Contains("not found", StringComparison.Ordinal))
+					if (exc.Message.Contains("was not found.", StringComparison.Ordinal))
 					{
+						// The location did not exist.
 						result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
 					}
 					else
