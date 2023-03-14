@@ -76,12 +76,12 @@ namespace ObjectBasin.Tests
 
 			((List<object>)expected["list"]).RemoveAt(0);
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = 0, DeleteCount = 1 });
-			AssertAreDeepEqual(expected, basin.Write(0));
+			AssertAreDeepEqual(expected, basin.Write(null));
 
 			((List<object>)expected["list"]).RemoveAt(1);
 			((List<object>)expected["list"]).RemoveAt(1);
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list", Position = 1, DeleteCount = 2 });
-			AssertAreDeepEqual(expected, basin.Write(0));
+			AssertAreDeepEqual(expected, basin.Write(null));
 
 			((List<object>)expected["list"])[0] = "item 1!";
 			basin.SetCursor(new BasinCursor { JsonPath = "object.list[0]", Position = 6, DeleteCount = 3 });

@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Linq;
 	using System.Text;
 	using Microsoft.AspNetCore.JsonPatch;
 	using Microsoft.AspNetCore.JsonPatch.Exceptions;
@@ -19,7 +20,6 @@
 	public class Basin<ValueType>
 	{
 		private BasinCursor? cursor;
-		private string? currentKey;
 		/// <summary>
 		/// The JSON Patch pointer path.
 		/// </summary>
@@ -32,18 +32,23 @@
 
 		public IDictionary<string, ValueType> Items { get; }
 
-		public void ApplyPatch(Operation operation)
+		public ValueType ApplyPatch(Operation operation)
 		{
-			// TODO Return the top level object that was modified.
+			var key = GetTopLevelKey(operation.path);
 			new JsonPatchDocument(new List<Operation>() { operation }, new DefaultContractResolver())
 				.ApplyTo(this.Items);
+			return this.Items[key];
 		}
 
-		public void ApplyPatches(List<Operation> operations)
+		public IEnumerable<ValueType> ApplyPatches(List<Operation> operations)
 		{
-			// TODO Return the top level objects that were modified without duplicates.
 			new JsonPatchDocument(operations, new DefaultContractResolver())
 				.ApplyTo(this.Items);
+			return operations
+				.Select(o => GetTopLevelKey(o.path))
+				.Distinct()
+				.Select(k => this.Items[k])
+				.ToArray();
 		}
 
 		public void SetCursor(BasinCursor cursor)
@@ -57,22 +62,11 @@
 			}
 #endif
 			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath);
-
-			var endIndex = this.currentPointer.IndexOf('/', 1);
-			endIndex = endIndex == -1 ? this.currentPointer.Length : endIndex;
-			var currentKeyBuilder = new StringBuilder(this.currentPointer);
-
-			// Remove the first "/".
-			currentKeyBuilder
-				.Remove(0, 1)
-				.Remove(endIndex - 1, currentKeyBuilder.Length - endIndex + 1)
-				.Replace("~0", "~")
-				.Replace("~1", "/");
-			this.currentKey = currentKeyBuilder.ToString();
 		}
 
-		public ValueType Write(object value)
+		public ValueType Write(object? value)
 		{
+			ValueType result = default;
 #if DEBUG
 			if (this.cursor?.JsonPath == null)
 			{
@@ -84,20 +78,16 @@
 			if (pos == null)
 			{
 				// Set the value.
-				// TODO Maybe we should be more efficient and create the operation manually so that the list of operation can remain with size 1 instead of getting resized or starting larger.
 				try
 				{
-					new JsonPatchDocument()
-						.Replace(this.currentPointer, value)
-						.ApplyTo(this.Items);
+					result = this.ApplyPatch(new Operation("replace", this.currentPointer, null, value));
 				}
 				catch (JsonPatchException exc)
 				{
+					// The location did not exist.
 					if (exc.Message.Contains("not found", StringComparison.Ordinal))
 					{
-						new JsonPatchDocument()
-							.Add(this.currentPointer, value)
-							.ApplyTo(this.Items);
+						result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
 					}
 					else
 					{
@@ -114,19 +104,20 @@
 					switch (token.Type)
 					{
 						case JTokenType.String:
-							this.HandleStringUpdate(value, pos, token);
+							result = this.HandleStringUpdate(value, pos, token);
 							break;
 						case JTokenType.Array:
-							this.HandleArrayUpdate(value, pos, token);
+							result = this.HandleArrayUpdate(value, pos, token);
 							break;
 						default:
 							throw new Exception($"Token of type  {token.Type} cannot be modified yet.");
 					}
 				}
-				var j = new JsonPatchDocument<IDictionary<string, ValueType>>();
 			}
 
-			return this.Items[this.currentKey!];
+#pragma warning disable CS8603 // Possible null reference return.
+			return result;
+#pragma warning restore CS8603 // Possible null reference return.
 		}
 
 		/// <summary>
@@ -169,8 +160,23 @@
 			return resultBuilder.ToString();
 		}
 
-		private void HandleArrayUpdate(object value, int? pos, JToken token)
+		private static string GetTopLevelKey(string pointer)
 		{
+			// Assume it starts with a "/" and remove it.
+			var endIndex = pointer.IndexOf('/', 1);
+			endIndex = endIndex == -1 ? pointer.Length : endIndex;
+			var result = new StringBuilder(pointer)
+				.Remove(0, 1)
+				.Remove(endIndex - 1, pointer.Length - endIndex)
+				.Replace("~0", "~")
+				.Replace("~1", "/")
+				.ToString();
+			return result;
+		}
+
+		private ValueType HandleArrayUpdate(object? value, int? pos, JToken token)
+		{
+			ValueType result;
 			var deleteCount = this.cursor!.DeleteCount;
 			var pointer = ConvertJsonPathToJsonPointer(token.Path);
 			if (deleteCount != null)
@@ -181,23 +187,28 @@
 				{
 					ops.Add(new Operation("remove", pointer, null));
 				}
-				this.ApplyPatches(ops);
+				var items = this.ApplyPatches(ops);
+
+				// There should only be one item because all of the pointers are the same.
+				result = items.First();
 			}
 			else if (pos == -1)
 			{
 				// Append
 				pointer += "/-";
-				this.ApplyPatch(new Operation("add", pointer, null, value));
+				result = this.ApplyPatch(new Operation("add", pointer, null, value));
 			}
 			else
 			{
 				// Insert
 				pointer += $"/{pos!.Value}";
-				this.ApplyPatch(new Operation("add", pointer, null, value));
+				result = this.ApplyPatch(new Operation("add", pointer, null, value));
 			}
+
+			return result;
 		}
 
-		private int? HandleStringUpdate(object value, int? pos, JToken token)
+		private ValueType HandleStringUpdate(object? value, int? pos, JToken token)
 		{
 			var deleteCount = this.cursor!.DeleteCount;
 			string newValue;
@@ -216,8 +227,7 @@
 
 			// Need to replace the string, otherwise we could end up inserting a new entry in a list.
 			// There are tests for this.
-			this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
-			return deleteCount;
+			return this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
 		}
 	}
 }
