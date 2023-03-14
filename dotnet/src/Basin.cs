@@ -91,7 +91,7 @@
 				throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 			}
 #endif
-			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath);
+			this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath!);
 		}
 
 		/// <summary>
@@ -110,7 +110,7 @@
 				throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 			}
 #endif
-			var path = this.cursor.JsonPath;
+			var path = this.cursor!.JsonPath!;
 			var pos = this.cursor.Position;
 			if (pos == null)
 			{

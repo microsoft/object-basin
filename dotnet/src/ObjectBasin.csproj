@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>ObjectBasin</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Justin D. Harris</Authors>
     <Company>Microsoft</Company>
     <Nullable>enable</Nullable>
@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <None Include="../.editorconfig" />
-    <None Include="../README.md" />
+    <None Include="../README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
