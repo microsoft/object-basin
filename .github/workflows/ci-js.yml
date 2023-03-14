@@ -23,14 +23,14 @@ on:
     - 'LICENSE'
     - 'dotnet/**'
 
-defaults:
-  run:
-    working-directory: js
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: js
 
     strategy:
       matrix:
@@ -44,7 +44,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-      working-directory: js
     - name: "Install"
       run: npm ci
 
