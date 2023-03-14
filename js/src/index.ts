@@ -42,7 +42,7 @@ export class Basin<T> {
 	private _currentKey?: T
 
 	/**
-	 * @param items The items to contain. If not provided, an empty object will be used.
+	 * @param items The items to contain. If not provided, an empty object will be created.
 	 * @param _cursor The cursor to use. If not provided, then it must be provided later by calling {@link setCursor}.
 	 */
 	public constructor(
@@ -53,6 +53,8 @@ export class Basin<T> {
 		}
 	}
 
+	// TODO Support JSON Patch paths like we will in .NET.
+
 	/**
 	 * @param cursor The cursor to use.
 	 */
@@ -60,12 +62,15 @@ export class Basin<T> {
 		this._cursor = cursor
 		if (cursor.j !== undefined) {
 			cursor.jsonPath = cursor.j
+			delete cursor.j
 		}
 		if (cursor.p !== undefined) {
 			cursor.position = cursor.p
+			delete cursor.p
 		}
 		if (cursor.d !== undefined) {
 			cursor.deleteCount = cursor.d
+			delete cursor.d
 		}
 
 		const expressions = jp.parse(cursor.jsonPath!)

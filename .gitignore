@@ -1,4 +1,8 @@
-/build/
+.vs/
+bin/
+obj/
+
+/js/build/
 
 # Logs
 logs
