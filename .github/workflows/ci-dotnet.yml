@@ -43,6 +43,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal --configuration Release
     - name: Lint
       run: dotnet format --verify-no-changes --severity info --no-restore *.sln
