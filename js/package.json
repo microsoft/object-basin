@@ -10,9 +10,11 @@
 	"types": "build/index.d.ts",
 	"keywords": [
 		"JSONPath",
+		"JSON",
 		"object",
 		"stream",
-		"update"
+		"update",
+		"patch"
 	],
 	"files": [
 		"build"
@@ -23,6 +25,7 @@
 		"test-watch": "ts-mocha --recursive --watch --extension ts src/**/*.test.ts"
 	},
 	"dependencies": {
+		"fast-json-patch": "^3.1.1",
 		"jsonpath": "^1.1.1"
 	},
 	"devDependencies": {
