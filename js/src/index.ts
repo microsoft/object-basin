@@ -64,7 +64,9 @@ export class Basin<T> {
 		const topLevelKeys = new Set<string>()
 		const result: T[] = []
 		for (const operation of operations) {
-			const key = operation.path.split('/', 2)[1]
+			let endIndex = operation.path.indexOf('/', 1);
+			endIndex = endIndex == -1 ? operation.path.length : endIndex;
+			const key = operation.path.slice(1, endIndex)
 				.replace(/~1/g, '/')
 				.replace(/~0/g, '~')
 			if (topLevelKeys.has(key)) {
