@@ -9,7 +9,7 @@ namespace ObjectBasin.Tests
 	public class BasinTests
 	{
 		[TestMethod]
-		public void ApplyPatches()
+		public void ApplyPatchTest()
 		{
 			var basin = new Basin<string>();
 			basin.ApplyPatch(new()
