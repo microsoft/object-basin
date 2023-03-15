@@ -9,6 +9,19 @@ namespace ObjectBasin.Tests
 	public class BasinTests
 	{
 		[TestMethod]
+		public void ApplyPatches()
+		{
+			var basin = new Basin<string>();
+			basin.ApplyPatch(new()
+			{
+				op = "add",
+				path = "/weird~0~1~01key",
+				value = "value"
+			});
+			Assert.AreEqual(basin.Items["weird~/~1key"], "value");
+		}
+
+		[TestMethod]
 		public void ExampleTests()
 		{
 			// Based on the example in the README.md.

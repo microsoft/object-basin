@@ -1,4 +1,5 @@
 import jp from 'jsonpath'
+import * as jsonpatch from 'fast-json-patch'
 
 /**
  * Indicates where updates should be made in a {@link Basin}.
@@ -53,7 +54,28 @@ export class Basin<T> {
 		}
 	}
 
-	// TODO Support JSON Patch paths like we will in .NET.
+	/**
+	 * Apply JSON Patch operations.
+	 * @param operations The operations to apply.
+	 * @returns The top level items that were modified.
+	 */
+	applyPatches(operations: jsonpatch.Operation[]): T[] {
+		jsonpatch.applyPatch(this.items, operations)
+		const topLevelKeys = new Set<string>()
+		const result: T[] = []
+		for (const operation of operations) {
+			const key = operation.path.split('/', 2)[1]
+				.replace(/~1/g, '/')
+				.replace(/~0/g, '~')
+			if (topLevelKeys.has(key)) {
+				continue
+			}
+			result.push(this.items[key])
+			topLevelKeys.add(key)
+		}
+
+		return result
+	}
 
 	/**
 	 * @param cursor The cursor to use.

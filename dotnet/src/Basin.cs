@@ -47,9 +47,9 @@
 		public IDictionary<string, ValueType> Items { get; }
 
 		/// <summary>
-		/// Apply a patch.
+		/// Apply a JSON Patch operation.
 		/// </summary>
-		/// <param name="operation">The patch.</param>
+		/// <param name="operation">The operation to apply.</param>
 		/// <returns>
 		/// The current top level item that was modified.
 		/// </returns>
@@ -62,9 +62,9 @@
 		}
 
 		/// <summary>
-		/// Apply patches.
+		/// Apply JSON Patch operations.
 		/// </summary>
-		/// <param name="operations">The patches</param>
+		/// <param name="operations">The operations to apply.</param>
 		/// <returns>The top level items that were modified.</returns>
 		public IEnumerable<ValueType> ApplyPatches(List<Operation> operations)
 		{
@@ -201,8 +201,8 @@
 			var result = new StringBuilder(pointer)
 				.Remove(0, 1)
 				.Remove(endIndex - 1, pointer.Length - endIndex)
-				.Replace("~0", "~")
 				.Replace("~1", "/")
+				.Replace("~0", "~")
 				.ToString();
 			return result;
 		}

@@ -2,6 +2,41 @@ import { expect } from 'chai'
 import { Basin } from '..'
 
 describe('Basin', () => {
+	it('patch', () => {
+		const basin = new Basin<any>({
+			key: 'value',
+		})
+		expect(basin.applyPatches([
+			{ op: 'add', path: '/key', value: 'new value' },
+		])).to.deep.equal(['new value'])
+
+		expect(basin.applyPatches([
+			{ op: 'add', path: '/key', value: 'newer value' },
+			{ op: 'add', path: '/object', value: { list: [1] } },
+			{ op: 'add', path: '/object/list/1', value: 2 },
+		])).to.deep.equal(['newer value', { list: [1, 2] }])
+
+		expect(basin.applyPatches([
+			{ op: 'add', path: '/object/id', value: 'object id' },
+		])).to.deep.equal([{ id: 'object id', list: [1, 2] }])
+
+		expect(basin.applyPatches([
+			{ op: 'replace', path: '/key', value: 'newest value' },
+			{ op: 'replace', path: '/object/id', value: 'object id 2' },
+		])).to.deep.equal(['newest value', { id: 'object id 2', list: [1, 2] }])
+
+		expect(basin.items).to.deep
+			.equal({
+				key: 'newest value',
+				object: { id: 'object id 2', list: [1, 2] },
+			})
+
+		expect(basin.applyPatches([
+			{ op: 'add', path: '/weird~0~1~01key', value: 'val' },
+		])).to.deep.equal(['val'])
+		expect(basin.items['weird~/~1key']).to.equal('val')
+	})
+
 	it('string', () => {
 		const basin = new Basin<any>()
 		const key = 'key'
