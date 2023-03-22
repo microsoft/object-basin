@@ -1,5 +1,8 @@
+import jsonpatch, { Operation } from 'fast-json-patch'
 import jp from 'jsonpath'
-import * as jsonpatch from 'fast-json-patch'
+
+// Export to help dependencies because this is used in our interface.
+export { Operation } from 'fast-json-patch'
 
 /**
  * Indicates where updates should be made in a {@link Basin}.
@@ -59,7 +62,7 @@ export class Basin<T> {
 	 * @param operations The operations to apply.
 	 * @returns The top level items that were modified.
 	 */
-	applyPatches(operations: jsonpatch.Operation[]): T[] {
+	applyPatches(operations: Operation[]): T[] {
 		jsonpatch.applyPatch(this.items, operations)
 		const topLevelKeys = new Set<string>()
 		const result: T[] = []
