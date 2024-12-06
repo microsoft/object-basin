@@ -159,10 +159,9 @@
 		/// <param name="path">A JSONPath.</param>
 		/// <returns>A JSON Pointer</returns>
 		/// <remarks>
-		/// Exposed for testing.
-		/// ASSUMPTION: Only handles simple cases. E.g., key names cannot have &quot;[&quot; or &quot;]&quot;.
+		/// ASSUMPTION: Only handles simple cases. E.g., key names within the path cannot have &quot;[&quot; or &quot;]&quot;.
 		/// </remarks>
-		public static string ConvertJsonPathToJsonPointer(string path)
+		internal static string ConvertJsonPathToJsonPointer(string path)
 		{
 			// TODO Optimize to only go through the path once.
 			var resultBuilder = new StringBuilder(path);
@@ -193,7 +192,7 @@
 			return resultBuilder.ToString();
 		}
 
-		private static string GetTopLevelKey(string pointer)
+		internal static string GetTopLevelKey(string pointer)
 		{
 			// Assume it starts with a "/" and remove it.
 			var endIndex = pointer.IndexOf('/', 1);
