@@ -2,6 +2,8 @@ namespace ObjectBasin.Tests;
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.Json;
+using AdaptiveCards;
 using Newtonsoft.Json;
 using ObjectBasin;
 
@@ -143,7 +145,7 @@ public class BasinTests
 	}
 
 	[TestMethod]
-	public void MyClass_Tests()
+	public void MyClass_Text_Tests()
 	{
 		var basin = new Basin<MyClass>();
 		const string key = "key";
@@ -153,6 +155,7 @@ public class BasinTests
 		};
 		basin.SetCursor(new BasinCursor
 		{
+			// Note that it does not work with "text" with a lowercase "t".
 			JsonPath = $"$.['{key}'].Text",
 			Position = -1,
 		});
@@ -171,9 +174,132 @@ public class BasinTests
 		Assert.AreEqual("Hello World!", writeResult.Text);
 		expected[key].Text = "Hello World!";
 		AssertAreDeepEqual(expected, basin.Items);
+	}
 
-		// TODO Add test for writing into the JsonElement.
+	[TestMethod]
+	public void MyClass_TextWithAttribute_Tests()
+	{
+		var basin = new Basin<MyClass>();
+		const string key = "key";
+		basin.Items[key] = new MyClass()
+		{
+			TextWithAttribute = "Hello ",
+		};
+		basin.SetCursor(new BasinCursor
+		{
+			// A lower case first letter works because we have an attribute on the property.
+			JsonPath = $"$.['{key}'].textWithAttribute",
+			Position = -1,
+		});
 
+		var expected = new Dictionary<string, MyClass>
+		{
+			[key] = new MyClass()
+			{
+				TextWithAttribute = "Hello ",
+			},
+		};
+		AssertAreDeepEqual(expected, basin.Items);
+		var writeResult = basin.Write("World!");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreEqual("Hello World!", writeResult.TextWithAttribute);
+		expected[key].TextWithAttribute = "Hello World!";
+		AssertAreDeepEqual(expected, basin.Items);
+	}
+
+	[TestMethod]
+	public void MyClass_Elements_Tests()
+	{
+		var basin = new Basin<MyClass>();
+		const string key = "key";
+		var ac = new AdaptiveCard("1.5")
+		{
+			Body = [
+				new AdaptiveTextBlock("Hello")],
+		};
+		var acJson = JsonConvert.SerializeObject(ac);
+		Assert.AreEqual("{\"type\":\"AdaptiveCard\",\"version\":\"1.5\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"Hello\"}]}", acJson);
+		var acJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(acJson);
+		Assert.AreEqual("Hello", acJsonElement.GetProperty("body")[0].GetProperty("text").GetString());
+		basin.Items[key] = new MyClass()
+		{
+			Elements = [
+				acJsonElement,
+			],
+		};
+		basin.SetCursor(new BasinCursor
+		{
+			JsonPath = $"$.['{key}'].elements[0].body[0].text",
+			Position = -1,
+		});
+
+		var writeResult = basin.Write("World!");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreEqual("Hello World!", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
+		const string expectedAcJson = "{\"type\":\"AdaptiveCard\",\"version\":\"1.5\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"Hello World!\"}]}";
+		var expectedAcJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(expectedAcJson);
+		var expected = new Dictionary<string, MyClass>
+		{
+			[key] = new MyClass()
+			{
+				Elements = [
+					expectedAcJsonElement,
+				],
+			},
+		};
+		AssertAreDeepEqual(expected, basin.Items);
+	}
+
+	[TestMethod]
+	public void MyClass_MyElements_Tests()
+	{
+		var basin = new Basin<MyClass>();
+		const string key = "key";
+		basin.Items[key] = new MyClass()
+		{
+			MyElements = [
+				new MyElement
+				{
+					Body = [
+						new MyBodyElement
+						{
+							Text = "Hello ",
+						},
+					],
+				},
+			],
+		};
+		basin.SetCursor(new BasinCursor
+		{
+			JsonPath = $"$.['{key}'].MyElements[0].Body[0].Text",
+			Position = -1,
+		});
+
+		var writeResult = basin.Write("World!");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreEqual("Hello World!", writeResult.MyElements![0].Body![0].Text);
+
+		var expected = new Dictionary<string, MyClass>
+		{
+			[key] = new MyClass()
+			{
+				MyElements = [
+					new MyElement
+					{
+						Body = [
+							new MyBodyElement
+							{
+								Text = "Hello World!",
+							},
+						],
+					},
+				],
+			},
+		};
+		AssertAreDeepEqual(expected, basin.Items);
 	}
 
 	[DataRow("/key", "key")]

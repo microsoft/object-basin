@@ -136,7 +136,10 @@
 			else
 			{
 				// Get the value at the path.
-				var obj = JObject.FromObject(this.Items);
+				Newtonsoft.Json.JsonSerializer jsonSerializer = Newtonsoft.Json.JsonSerializer.CreateDefault();
+				// Add a converter to read `JsonElement`s.
+				jsonSerializer.Converters.Add(new JsonElementConverter());
+				var obj = JObject.FromObject(this.Items, jsonSerializer);
 				foreach (var token in obj.SelectTokens(path))
 				{
 					result = token.Type switch
