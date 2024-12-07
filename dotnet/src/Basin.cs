@@ -55,8 +55,9 @@
 		/// </returns>
 		public ValueType ApplyPatch(Operation operation)
 		{
-			var resolver = new DefaultContractResolver();
+			// TODO Make once.
 			// TODO Add converters.
+			var resolver = new DefaultContractResolver();
 			var key = GetTopLevelKey(operation.path);
 			new JsonPatchDocument(new List<Operation>() { operation }, resolver)
 				.ApplyTo(this.Items);
@@ -137,10 +138,10 @@
 			}
 			else
 			{
-				// Get the value at the path.
+				// TODO Make once.
 				Newtonsoft.Json.JsonSerializer jsonSerializer = Newtonsoft.Json.JsonSerializer.CreateDefault();
-				// Add a converter to read `JsonElement`s.
 				jsonSerializer.Converters.Add(new JsonElementConverter());
+				// Get the value at the path.
 				var obj = JObject.FromObject(this.Items, jsonSerializer);
 				foreach (var token in obj.SelectTokens(path))
 				{
