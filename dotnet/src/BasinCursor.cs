@@ -24,7 +24,9 @@
 
 		/// <summary>
 		/// The position at <see cref="JsonPath"/> to update.
-		/// Currently only <tt>null</tt> is supported to mean to append to the end of a string.
+		/// <tt>null</tt> means set the value.
+		/// <tt>-1</tt> means append to the end.
+		/// Otherwise use an index to insert at that position.
 		/// </summary>
 		/// <remarks>
 		/// Note that that concise name &quot;p&quot; is used for serialization.
