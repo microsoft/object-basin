@@ -55,8 +55,10 @@
 		/// </returns>
 		public ValueType ApplyPatch(Operation operation)
 		{
+			var resolver = new DefaultContractResolver();
+			// TODO Add converters.
 			var key = GetTopLevelKey(operation.path);
-			new JsonPatchDocument(new List<Operation>() { operation }, new DefaultContractResolver())
+			new JsonPatchDocument(new List<Operation>() { operation }, resolver)
 				.ApplyTo(this.Items);
 			return this.Items[key];
 		}
