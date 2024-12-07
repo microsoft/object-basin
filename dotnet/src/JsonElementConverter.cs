@@ -33,7 +33,26 @@
 			}
 
 			var element = (System.Text.Json.JsonElement)value;
-			writer.WriteRawValue(element.ToString());
+			switch (element.ValueKind)
+			{
+				case System.Text.Json.JsonValueKind.Object:
+					{
+						JObject obj = JObject.Parse(element.GetRawText());
+						obj.WriteTo(writer);
+						break;
+					}
+
+				case System.Text.Json.JsonValueKind.Array:
+					{
+						JArray obj = JArray.Parse(element.GetRawText());
+						obj.WriteTo(writer);
+						break;
+					}
+
+				default:
+					writer.WriteValue(element.ToString());
+					break;
+			}
 		}
 	}
 }
