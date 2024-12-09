@@ -263,7 +263,41 @@ public class BasinTests
 		Assert.AreEqual("Hello World! How are you?", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
 	}
 
-	[Ignore("This test is not working yet.")]
+	[Ignore("Not supported for `JsonElement`s yet.")]
+	[TestMethod]
+	public void MyClass_Elements_Replace_String_In_JsonElement_Test()
+	{
+		var basin = new Basin<MyClass>();
+		const string key = "key";
+		var ac = new AdaptiveCard("1.5")
+		{
+			Body = [
+				new AdaptiveTextBlock("Hello ")],
+		};
+		var acJson = JsonConvert.SerializeObject(ac);
+		Assert.AreEqual("{\"type\":\"AdaptiveCard\",\"version\":\"1.5\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"Hello \"}]}", acJson);
+		var acJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(acJson);
+		Assert.AreEqual("Hello ", acJsonElement.GetProperty("body")[0].GetProperty("text").GetString());
+		basin.Items[key] = new MyClass()
+		{
+			Elements = [
+				acJsonElement,
+			],
+		};
+
+		// Overwrite with no position.
+		basin.SetCursor(new BasinCursor()
+		{
+			JsonPath = $"$.['{key}'].elements[0].body[0].text",
+		});
+		var writeResult = basin.Write("Replaced!");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreEqual("Replaced!", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
+
+	}
+
+	[Ignore("Not supported for `JsonElement`s yet.")]
 	[TestMethod]
 	public void MyClass_Elements_Array_Test()
 	{
@@ -284,16 +318,28 @@ public class BasinTests
 				acJsonElement,
 			],
 		};
-		basin.SetCursor(new BasinCursor
-		{
-			JsonPath = $"$.['{key}'].elements[0].body",
-			Position = 1,
-		});
 
 		var newTextBlock = new AdaptiveTextBlock("World!");
 		var newTextBlockJson = JsonConvert.SerializeObject(newTextBlock);
 		Assert.AreEqual("{\"type\":\"TextBlock\",\"text\":\"World!\"}", newTextBlockJson);
 		var newTextBlockJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(newTextBlockJson);
+
+		var patchResult = basin.ApplyPatch(new()
+		{
+			op = "add",
+			path = $"/{key}/elements/0/body/1",
+			value = newTextBlockJsonElement,
+		});
+		Assert.IsNotNull(patchResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], patchResult);
+		Assert.IsNotNull(patchResult.Elements, "Elements is null.");
+		Assert.AreEqual("World!", patchResult.Elements![0].GetProperty("body")[1].GetProperty("text").GetString());
+
+		basin.SetCursor(new BasinCursor
+		{
+			JsonPath = $"$.['{key}'].elements[0].body",
+			Position = 1,
+		});
 		var writeResult = basin.Write(newTextBlockJsonElement);
 		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
 		Assert.AreSame(basin.Items[key], writeResult);

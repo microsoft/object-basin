@@ -109,19 +109,22 @@ public sealed class Basin<ValueType>
 	/// <param name="value">The value to write or insert.
 	/// Ignored when deleting items from lists.
 	/// </param>
-	/// <returns>The current top level item that was modified.</returns>
+	/// <returns>
+	/// The current top level item that was modified.
+	/// This reference should be used as a source of truth for the item.
+	/// </returns>
 	public ValueType? Write(object? value)
 	{
 		ValueType? result = default;
 #if DEBUG
-		if (this.cursor?.JsonPath == null)
+		if (this.cursor?.JsonPath is null)
 		{
-			throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
+			throw new ArgumentException($"The cursor or its `{nameof(BasinCursor.JsonPath)}` is null.");
 		}
 #endif
 		var path = this.cursor!.JsonPath!;
 		var pos = this.cursor.Position;
-		if (pos == null)
+		if (pos is null)
 		{
 			// Set the value.
 			try
@@ -131,7 +134,7 @@ public sealed class Basin<ValueType>
 			}
 			catch (JsonPatchException exc)
 			{
-				if (exc.Message.Contains("was not found.", StringComparison.Ordinal))
+				if (exc.Message.EndsWith("' was not found.", StringComparison.Ordinal))
 				{
 					// The location did not exist.
 					result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
@@ -144,13 +147,13 @@ public sealed class Basin<ValueType>
 		}
 		else
 		{
-			// Get the value at the path.
+			// Find the value(s) at the path, then handle updating them.
 			var obj = JObject.FromObject(this.Items, s_jsonSerializer);
 			foreach (var token in obj.SelectTokens(path))
 			{
 				result = token.Type switch
 				{
-					JTokenType.String => this.HandleStringUpdate(value, pos, obj, token),
+					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token),
 					JTokenType.Array => this.HandleArrayUpdate(value, pos, token),
 					_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
 				};
@@ -247,7 +250,7 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleStringUpdate(object? value, int? pos, JObject obj, JToken token)
+	private ValueType? HandleStringUpdate(object? value, int pos, JObject obj, JToken token)
 	{
 		var deleteCount = this.cursor!.DeleteCount;
 		string newValue;
@@ -261,7 +264,7 @@ public sealed class Basin<ValueType>
 		{
 			// Insert
 			this.cursor.Position += (value as string)!.Length;
-			newValue = currentValue[0..pos!.Value] + value + currentValue[(pos.Value + (deleteCount ?? 0))..];
+			newValue = currentValue[0..pos] + value + currentValue[(pos + (deleteCount ?? 0))..];
 		}
 
 		try
@@ -270,7 +273,7 @@ public sealed class Basin<ValueType>
 			// There are tests for this.
 			return this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
 		}
-		catch
+		catch (JsonPatchException)
 		{
 			// Fallback to modifying the token directly.
 			// This is mainly to handle `JsonElement`s.
