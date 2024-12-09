@@ -85,7 +85,7 @@ export class Basin<T> {
 	/**
 	 * @param cursor The cursor to use.
 	 */
-	public setCursor(cursor: BasinCursor): void {
+	public setCursor(cursor: BasinCursor, label?: string): void {
 		this._cursor = cursor
 		if (cursor.j !== undefined) {
 			cursor.jsonPath = cursor.j
@@ -115,7 +115,7 @@ export class Basin<T> {
 	 * Ignored when deleting items from lists.
 	 * @returns The current top level item that was modified.
 	 */
-	public write(value?: any): T {
+	public write(value?: any, cursorLabel?: string): T {
 		// For efficiency, assume the cursor is set.
 		const cursor = this._cursor!
 		const position = cursor.position

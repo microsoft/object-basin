@@ -149,4 +149,20 @@ describe('Basin', () => {
 		basin.setCursor({ jsonPath: 'holder.list2[1]', position: -1 })
 		expect(basin.write(4)).to.deep.equal({ list2: [1, 2 + 4, 3] })
 	})
+
+	it('multi-cursor', () => {
+		const basin = new Basin<any>({ list: [
+			"Hello ",
+			"Hi ",
+			"Hey ",
+		] })
+		basin.setCursor({ jsonPath: 'list[0]', p: -1 })
+		basin.setCursor({ jsonPath: 'list[1]', p: -1 }, '1')
+		basin.setCursor({ jsonPath: 'list[2]', p: -1 }, '2')
+		expect(basin.write("there")).to.deep.equal({ list: ["Hello there", "Hi ", "Hey "] })
+		expect(basin.write("guy", '1')).to.deep.equal({ list: ["Hello there", "Hi you", "Hey "] })
+		expect(basin.write("you", '2')).to.deep.equal({ list: ["Hello there", "Hi you", "Hey you"] })
+		expect(basin.write(".", '1')).to.deep.equal({ list: ["Hello there.", "Hi you.", "Hey you"] })
+		expect(basin.write("!", '2')).to.deep.equal({ list: ["Hello there.", "Hi you.", "Hey you!"] })
+	})
 })
