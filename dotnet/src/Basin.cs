@@ -44,7 +44,7 @@ public sealed class Basin<ValueType>
 		BasinCursor? cursor = null)
 	{
 		this.Items = items ?? new Dictionary<string, ValueType?>();
-		if (cursor != null)
+		if (cursor is not null)
 		{
 			this.SetCursor(cursor);
 		}

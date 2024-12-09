@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using ObjectBasin;
 
 [TestClass]
-public class BasinTests
+public sealed class BasinTests
 {
 	[TestMethod]
 	public void ApplyPatchTest()
