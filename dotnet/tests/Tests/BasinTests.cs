@@ -138,8 +138,8 @@ public class BasinTests
 		AssertAreDeepEqual(expected, basin.Write(new List<object> { new Dictionary<string, object> { ["t"] = "h" } }));
 
 		basin.SetCursor(new BasinCursor { JsonPath = $"{key}.b.[0].t", Position = -1 });
-		basin.Write("el");
-		basin.Write("lo");
+		var o = basin.Write("el");
+		Assert.AreSame(o, basin.Write("lo"));
 		expected["b"] = new List<object> { new Dictionary<string, object> { ["t"] = "hello" } };
 		AssertAreDeepEqual(expected, basin.Items[key]);
 	}
@@ -149,10 +149,11 @@ public class BasinTests
 	{
 		var basin = new Basin<MyClass>();
 		const string key = "key";
-		basin.Items[key] = new MyClass()
+		var myClass = new MyClass()
 		{
 			Text = "Hello ",
 		};
+		basin.Items[key] = myClass;
 		basin.SetCursor(new BasinCursor
 		{
 			// Note that it does not work with "text" with a lowercase "t".
@@ -171,6 +172,7 @@ public class BasinTests
 		var writeResult = basin.Write("World!");
 		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
 		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreSame(myClass, writeResult);
 		Assert.AreEqual("Hello World!", writeResult.Text);
 		expected[key].Text = "Hello World!";
 		AssertAreDeepEqual(expected, basin.Items);
@@ -181,10 +183,11 @@ public class BasinTests
 	{
 		var basin = new Basin<MyClass>();
 		const string key = "key";
-		basin.Items[key] = new MyClass()
+		var myClass = new MyClass()
 		{
 			TextWithAttribute = "Hello ",
 		};
+		basin.Items[key] = myClass;
 		basin.SetCursor(new BasinCursor
 		{
 			// A lower case first letter works because we have an attribute on the property.
@@ -203,6 +206,7 @@ public class BasinTests
 		var writeResult = basin.Write("World!");
 		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
 		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreSame(myClass, writeResult);
 		Assert.AreEqual("Hello World!", writeResult.TextWithAttribute);
 		expected[key].TextWithAttribute = "Hello World!";
 		AssertAreDeepEqual(expected, basin.Items);
@@ -410,9 +414,11 @@ public class BasinTests
 	{
 		var basin = new Basin<object>();
 		basin.SetCursor(new BasinCursor { JsonPath = "$.list" });
-		basin.Write(new List<string> { "item 1" });
+		var o = basin.Write(new List<string> { "item 1" });
+		AssertAreDeepEqual(new List<string> { "item 1" }, o);
 		basin.SetCursor(new BasinCursor { JsonPath = "list[0]" });
-		basin.Write("1");
+		Assert.AreSame(o, basin.Write("1"));
+		AssertAreDeepEqual(new List<string> { "1" }, o);
 	}
 
 	private static void AssertAreDeepEqual(object? expected, object? actual)
