@@ -14,6 +14,9 @@ dotnet_style_qualification_for_method = true:error
 dotnet_style_qualification_for_property = true:error
 dotnet_diagnostic.CS1076.severity = error
 
+# Ban unused usings
+dotnet_diagnostic.IDE0005.severity = error
+
 # Remove unread private members
 dotnet_diagnostic.IDE0052.severity = error
 
