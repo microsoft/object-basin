@@ -147,7 +147,18 @@ public sealed class Basin<ValueType>
 	public ValueType? Write(object? value, string? cursorLabel = null)
 	{
 		ValueType? result = default;
-		var cursor = cursorLabel is null ? this.defaultCursor : this.cursors[cursorLabel];
+		BasinCursor cursor;
+		string pointer;
+		if (cursorLabel is null)
+		{
+			cursor = this.defaultCursor!;
+			pointer = this.defaultPointer!;
+		}
+		else
+		{
+			cursor = this.cursors[cursorLabel];
+			pointer = this.pointers[cursorLabel];
+		}
 #if DEBUG
 		if (cursor?.JsonPath is null)
 		{
@@ -168,8 +179,8 @@ public sealed class Basin<ValueType>
 			{
 				result = token.Type switch
 				{
-					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token, cursorLabel),
-					JTokenType.Array => this.HandleArrayUpdate(value, pos, token, cursorLabel),
+					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token, cursor, pointer),
+					JTokenType.Array => this.HandleArrayUpdate(value, pos, cursor, pointer),
 					_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
 				};
 			}
@@ -273,12 +284,10 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleArrayUpdate(object? value, int? pos, JToken token, string? cursorLabel)
+	private ValueType? HandleArrayUpdate(object? value, int? pos, BasinCursor cursor, string pointer)
 	{
 		ValueType? result;
-		var cursor = cursorLabel is null ? this.defaultCursor! : this.cursors[cursorLabel];
 		var deleteCount = cursor.DeleteCount;
-		var pointer = ConvertJsonPathToJsonPointer(token.Path);
 		if (deleteCount != null)
 		{
 			pointer += $"/{pos!.Value}";
@@ -308,21 +317,8 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleStringUpdate(object? value, int pos, JObject obj, JToken token, string? cursorLabel)
+	private ValueType? HandleStringUpdate(object? value, int pos, JObject obj, JToken token, BasinCursor cursor, string pointer)
 	{
-		BasinCursor cursor;
-		string pointer;
-		if (cursorLabel is null)
-		{
-			cursor = this.defaultCursor!;
-			pointer = this.defaultPointer!;
-		}
-		else
-		{
-			cursor = this.cursors[cursorLabel];
-			pointer = this.pointers[cursorLabel];
-		}
-
 		var deleteCount = cursor.DeleteCount;
 		string newValue;
 		var currentValue = token.ToString();
