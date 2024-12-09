@@ -266,9 +266,11 @@ public sealed class Basin<ValueType>
 		}
 
 		token.Replace(newValue);
-		var items = obj.ToObject<Dictionary<string, ValueType?>>(s_jsonSerializer)!;
+		// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
+		// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
+		// We used to use a JSON Patch "replace" operation here, but that likely did a lot of extra serialization too.
 		var key = GetTopLevelKey(this.currentPointer!);
-		var result = items[key];
+		var result = obj[key]!.ToObject<ValueType?>(s_jsonSerializer);
 		return this.Items[key] = result;
 	}
 }
