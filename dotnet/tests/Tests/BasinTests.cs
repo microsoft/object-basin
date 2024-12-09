@@ -27,8 +27,8 @@ public sealed class BasinTests
 	public void ExampleTests()
 	{
 		// Based on the example in the README.md.
-		var basin = new Basin<object>();
-		basin.SetCursor(new BasinCursor { JsonPath = "message" });
+		var basin = new Basin<object>(
+			cursor: new BasinCursor { JsonPath = "message" });
 		Assert.AreEqual("ello", basin.Write("ello"));
 		basin.SetCursor(new BasinCursor { JsonPath = "message", Position = -1 });
 		Assert.AreEqual("ello World", basin.Write(" World"));
