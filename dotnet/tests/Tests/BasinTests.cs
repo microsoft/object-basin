@@ -176,10 +176,16 @@ public sealed class BasinTests
 		Assert.AreSame(instance, textInMyElementsWriteResult);
 		Assert.AreEqual("Hey you", textInMyElementsWriteResult!.MyElements![0].Body![0].Text);
 
+		defaultWriteResult = basin.Write(".", null);
+		Assert.AreSame(instance, defaultWriteResult);
+
+		textWithAttributeWriteResult = basin.Write(". Bye.", "1");
+		Assert.AreSame(instance, textWithAttributeWriteResult);
+
 		var expected = new MyClass
 		{
-			Text = "Hello there",
-			TextWithAttribute = "Hi guy",
+			Text = "Hello there.",
+			TextWithAttribute = "Hi guy. Bye.",
 			MyElements = [
 				new MyElement
 				{

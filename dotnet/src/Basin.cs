@@ -28,12 +28,14 @@ public sealed class Basin<ValueType>
 		s_defaultJsonSerializer.Converters.Add(new JsonElementConverter());
 	}
 
-	private BasinCursor? cursor;
+	private readonly Dictionary<string, BasinCursor> cursors = [];
+	private BasinCursor? defaultCursor;
 
 	/// <summary>
-	/// The JSON Patch pointer path.
+	/// The JSON Patch pointer paths.
 	/// </summary>
-	private string? currentPointer;
+	private readonly Dictionary<string, string> pointers = [];
+	private string? defaultPointer;
 
 	/// <summary>
 	/// Helps reading objects when performing JSON Patch operations.
@@ -50,7 +52,8 @@ public sealed class Basin<ValueType>
 	/// Create a new basin.
 	/// </summary>
 	/// <param name="items">The items to contain. If not provided, an empty dictionary will be created.</param>
-	/// <param name="cursor">The cursor to use. If not provided, then it must be provided later by calling <see cref="SetCursor"/></param>
+	/// <param name="cursor">The default cursor to use.
+	/// If not provided, then it must be provided later by calling <see cref="SetCursor"/></param>
 	public Basin(
 		IDictionary<string, ValueType?>? items = null,
 		BasinCursor? cursor = null)
@@ -108,15 +111,23 @@ public sealed class Basin<ValueType>
 	/// </param>
 	public void SetCursor(BasinCursor cursor, string? label = null)
 	{
-		this.cursor = cursor;
-
 #if DEBUG
 		if (cursor?.JsonPath == null)
 		{
 			throw new ArgumentException($"The cursor or its {nameof(BasinCursor.JsonPath)} is null.");
 		}
 #endif
-		this.currentPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath!);
+
+		if (label is null)
+		{
+			this.defaultCursor = cursor;
+			this.defaultPointer = ConvertJsonPathToJsonPointer(cursor.JsonPath!);
+		}
+		else
+		{
+			this.cursors[label] = cursor;
+			this.pointers[label] = ConvertJsonPathToJsonPointer(cursor.JsonPath!);
+		}
 	}
 
 	/// <summary>
@@ -136,17 +147,18 @@ public sealed class Basin<ValueType>
 	public ValueType? Write(object? value, string? cursorLabel = null)
 	{
 		ValueType? result = default;
+		var cursor = cursorLabel is null ? this.defaultCursor : this.cursors[cursorLabel];
 #if DEBUG
-		if (this.cursor?.JsonPath is null)
+		if (cursor?.JsonPath is null)
 		{
 			throw new ArgumentException($"The cursor or its `{nameof(BasinCursor.JsonPath)}` is null.");
 		}
 #endif
-		var path = this.cursor!.JsonPath!;
-		var pos = this.cursor.Position;
+		var path = cursor.JsonPath!;
+		var pos = cursor.Position;
 		if (pos is null)
 		{
-			result = this.SetValue(value, result, path);
+			result = this.SetValue(value, result, path, cursorLabel);
 		}
 		else
 		{
@@ -156,8 +168,8 @@ public sealed class Basin<ValueType>
 			{
 				result = token.Type switch
 				{
-					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token),
-					JTokenType.Array => this.HandleArrayUpdate(value, pos, token),
+					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token, cursorLabel),
+					JTokenType.Array => this.HandleArrayUpdate(value, pos, token, cursorLabel),
 					_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
 				};
 			}
@@ -166,12 +178,14 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? SetValue(object? value, ValueType? result, string path)
+	private ValueType? SetValue(object? value, ValueType? result, string path, string? cursorLabel)
 	{
+		// Assume that the cursor was set properly before writing.
+		var pointer = cursorLabel is null ? this.defaultPointer! : this.pointers[cursorLabel];
 		try
 		{
 			// Need to try to replace first, otherwise a JSONPath like "object.list[1]" would insert a new entry in the list.
-			result = this.ApplyPatch(new Operation("replace", this.currentPointer, null, value));
+			result = this.ApplyPatch(new Operation("replace", pointer, null, value));
 		}
 		catch (JsonPatchException exc)
 		{
@@ -181,7 +195,7 @@ public sealed class Basin<ValueType>
 				try
 				{
 					// Try to add the value.
-					result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
+					result = this.ApplyPatch(new Operation("add", pointer, null, value));
 				}
 				catch (JsonPatchException)
 				{
@@ -193,7 +207,7 @@ public sealed class Basin<ValueType>
 						: JValue.CreateNull();
 					foreach (var token in obj.SelectTokens(path))
 					{
-						result = this.HandleJTokenReplace(obj, token, replacementValue);
+						result = this.HandleJTokenReplace(obj, token, replacementValue, pointer);
 					}
 				}
 			}
@@ -259,10 +273,11 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleArrayUpdate(object? value, int? pos, JToken token)
+	private ValueType? HandleArrayUpdate(object? value, int? pos, JToken token, string? cursorLabel)
 	{
 		ValueType? result;
-		var deleteCount = this.cursor!.DeleteCount;
+		var cursor = cursorLabel is null ? this.defaultCursor! : this.cursors[cursorLabel];
+		var deleteCount = cursor.DeleteCount;
 		var pointer = ConvertJsonPathToJsonPointer(token.Path);
 		if (deleteCount != null)
 		{
@@ -293,9 +308,22 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleStringUpdate(object? value, int pos, JObject obj, JToken token)
+	private ValueType? HandleStringUpdate(object? value, int pos, JObject obj, JToken token, string? cursorLabel)
 	{
-		var deleteCount = this.cursor!.DeleteCount;
+		BasinCursor cursor;
+		string pointer;
+		if (cursorLabel is null)
+		{
+			cursor = this.defaultCursor!;
+			pointer = this.defaultPointer!;
+		}
+		else
+		{
+			cursor = this.cursors[cursorLabel];
+			pointer = this.pointers[cursorLabel];
+		}
+
+		var deleteCount = cursor.DeleteCount;
 		string newValue;
 		var currentValue = token.ToString();
 		if (pos == -1)
@@ -306,7 +334,7 @@ public sealed class Basin<ValueType>
 		else
 		{
 			// Insert
-			this.cursor.Position += (value as string)!.Length;
+			cursor.Position += (value as string)!.Length;
 			newValue = currentValue[0..pos] + value + currentValue[(pos + (deleteCount ?? 0))..];
 		}
 
@@ -314,22 +342,22 @@ public sealed class Basin<ValueType>
 		{
 			// Need to replace the string, otherwise we could end up inserting a new entry in a list.
 			// There are tests for this.
-			return this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
+			return this.ApplyPatch(new Operation("replace", pointer, null, newValue));
 		}
 		catch (JsonPatchException)
 		{
-			return this.HandleJTokenReplace(obj, token, newValue);
+			return this.HandleJTokenReplace(obj, token, newValue, pointer);
 		}
 	}
 
-	private ValueType? HandleJTokenReplace(JObject obj, JToken token, JToken newValue)
+	private ValueType? HandleJTokenReplace(JObject obj, JToken token, JToken newValue, string pointer)
 	{
 		// Fallback to modifying the token directly.
 		// This is mainly to handle `JsonElement`s.
 		token.Replace(newValue);
 		// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
 		// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
-		var key = GetTopLevelKey(this.currentPointer!);
+		var key = GetTopLevelKey(pointer);
 		var result = obj[key]!.ToObject<ValueType?>(this.JsonSerializer);
 		return this.Items[key] = result;
 	}
