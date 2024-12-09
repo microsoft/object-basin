@@ -17,10 +17,12 @@ This library supports various ways to update objects or their contents:
 Learn more at https://github.com/microsoft/object-basin.
 
 # Unsupported Operations
-Unlike the JavaScript/TyperScript version which relies on simpler objects, this .NET version does not yet support operations such as adding or modifying all items within `JsonElement`s or other complex structures.
-String manipulation is supporting within `JsonElement`s, but not other operations such as adding a list or replacing an item with something that is not a string.
+Unlike the JavaScript/TyperScript version which relies on simpler objects, this .NET version does not yet support operations such as adding or modifying all types of items within `JsonElement`s or other complex structures.
+String manipulation is supported within `JsonElement`s such as appending to a string,
+but other operations such as adding to a list or some types of replacement are not supported yet.
 
-To be clear, deep manipulation within .NET objects (POCOs) is fine. The limitation is with some complex objects that require their own complex parsers.
+To be clear, deep manipulation within .NET objects (POCOs) is fine.
+The limitation is with some complex objects that require their own complex parsers.
 
 # Install
 ```bash
