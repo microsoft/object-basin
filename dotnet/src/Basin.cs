@@ -151,6 +151,7 @@ public sealed class Basin<ValueType>
 		string pointer;
 		if (cursorLabel is null)
 		{
+			// Assume that the cursor was set properly as documented before this method was called.
 			cursor = this.defaultCursor!;
 			pointer = this.defaultPointer!;
 		}
