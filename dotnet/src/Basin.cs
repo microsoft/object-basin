@@ -180,7 +180,7 @@ public sealed class Basin<ValueType>
 				result = token.Type switch
 				{
 					JTokenType.String => this.HandleStringUpdate(value, pos.Value, obj, token, cursor, pointer),
-					JTokenType.Array => this.HandleArrayUpdate(value, pos, cursor, pointer),
+					JTokenType.Array => this.HandleArrayUpdate(value, pos.Value, cursor, pointer),
 					_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
 				};
 			}
@@ -284,13 +284,13 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? HandleArrayUpdate(object? value, int? pos, BasinCursor cursor, string pointer)
+	private ValueType? HandleArrayUpdate(object? value, int pos, BasinCursor cursor, string pointer)
 	{
 		ValueType? result;
 		var deleteCount = cursor.DeleteCount;
 		if (deleteCount != null)
 		{
-			pointer += $"/{pos!.Value}";
+			pointer += $"/{pos}";
 			var ops = new List<Operation>(deleteCount.Value);
 			for (int i = 0; i < deleteCount.Value; ++i)
 			{
@@ -310,7 +310,7 @@ public sealed class Basin<ValueType>
 		else
 		{
 			// Insert
-			pointer += $"/{pos!.Value}";
+			pointer += $"/{pos}";
 			result = this.ApplyPatch(new Operation("add", pointer, null, value));
 		}
 
