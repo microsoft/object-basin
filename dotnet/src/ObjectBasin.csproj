@@ -7,10 +7,12 @@
     <Authors>Justin D. Harris</Authors>
     <Company>Microsoft</Company>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/microsoft/object-basin</RepositoryUrl>
+    <LangVersion>13.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

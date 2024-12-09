@@ -3,17 +3,18 @@
 using System.Text.Json;
 using Newtonsoft.Json;
 
-internal sealed class MyBodyElement
+// TODO Seal classes.
+public class MyBodyElement
 {
 	public string? Text { get; set; }
 }
 
-internal class MyElement
+public class MyElement
 {
 	public List<MyBodyElement>? Body { get; set; }
 }
 
-internal class MyClass
+public class MyClass
 {
 	// The Newtonsoft.Json property is required to support a JSONPath with "textWithAttribute" instead of "TextWithAttribute".
 	[JsonProperty("elements")]
