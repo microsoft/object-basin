@@ -77,7 +77,7 @@ public sealed class Basin<ValueType>
 	/// <returns>The top level items that were modified.</returns>
 	public IEnumerable<ValueType?> ApplyPatches(List<Operation> operations)
 	{
-		new JsonPatchDocument(operations, new DefaultContractResolver())
+		new JsonPatchDocument(operations, s_contractResolver)
 			.ApplyTo(this.Items);
 		return operations
 			.Select(o => GetTopLevelKey(o.path))
@@ -264,12 +264,22 @@ public sealed class Basin<ValueType>
 			newValue = currentValue[0..pos!.Value] + value + currentValue[(pos.Value + (deleteCount ?? 0))..];
 		}
 
-		token.Replace(newValue);
-		// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
-		// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
-		// We used to use a JSON Patch "replace" operation here, but that likely did a lot of extra serialization too.
-		var key = GetTopLevelKey(this.currentPointer!);
-		var result = obj[key]!.ToObject<ValueType?>(s_jsonSerializer);
-		return this.Items[key] = result;
+		try
+		{
+			// Need to replace the string, otherwise we could end up inserting a new entry in a list.
+			// There are tests for this.
+			return this.ApplyPatch(new Operation("replace", this.currentPointer, null, newValue));
+		}
+		catch
+		{
+			// Fallback to modifying the token directly.
+			// This is mainly to handle `JsonElement`s.
+			token.Replace(newValue);
+			// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
+			// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
+			var key = GetTopLevelKey(this.currentPointer!);
+			var result = obj[key]!.ToObject<ValueType?>(s_jsonSerializer);
+			return this.Items[key] = result;
+		}
 	}
 }

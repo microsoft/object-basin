@@ -252,7 +252,61 @@ public class BasinTests
 		};
 		AssertAreDeepEqual(expected, basin.Items);
 
-		// TODO Test list modifications in JsonElement.
+		// Ensure that we can write at the cursor again.
+		writeResult = basin.Write(" How are you?");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreEqual("Hello World! How are you?", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
+	}
+
+	[Ignore("This test is not working yet.")]
+	[TestMethod]
+	public void MyClass_Elements_Array_Test()
+	{
+		var basin = new Basin<MyClass>();
+		const string key = "key";
+		var ac = new AdaptiveCard("1.5")
+		{
+			Body = [
+				new AdaptiveTextBlock("Hello ")],
+		};
+		var acJson = JsonConvert.SerializeObject(ac);
+		Assert.AreEqual("{\"type\":\"AdaptiveCard\",\"version\":\"1.5\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"Hello \"}]}", acJson);
+		var acJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(acJson);
+		Assert.AreEqual("Hello ", acJsonElement.GetProperty("body")[0].GetProperty("text").GetString());
+		basin.Items[key] = new MyClass()
+		{
+			Elements = [
+				acJsonElement,
+			],
+		};
+		basin.SetCursor(new BasinCursor
+		{
+			JsonPath = $"$.['{key}'].elements[0].body",
+			Position = 1,
+		});
+
+		var newTextBlock = new AdaptiveTextBlock("World!");
+		var newTextBlockJson = JsonConvert.SerializeObject(newTextBlock);
+		Assert.AreEqual("{\"type\":\"TextBlock\",\"text\":\"World!\"}", newTextBlockJson);
+		var newTextBlockJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(newTextBlockJson);
+		var writeResult = basin.Write(newTextBlockJsonElement);
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.IsNotNull(writeResult.Elements, "Elements is null.");
+		Assert.AreEqual("Hello World!", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
+		const string expectedAcJson = "{\"type\":\"AdaptiveCard\",\"version\":\"1.5\",\"body\":[{\"type\":\"TextBlock\",\"text\":\"Hello World!\"}]}";
+		var expectedAcJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(expectedAcJson);
+		var expected = new Dictionary<string, MyClass>
+		{
+			[key] = new MyClass()
+			{
+				Elements = [
+					expectedAcJsonElement,
+				],
+			},
+		};
+		AssertAreDeepEqual(expected, basin.Items);
 	}
 
 	[TestMethod]
@@ -260,7 +314,7 @@ public class BasinTests
 	{
 		var basin = new Basin<MyClass>();
 		const string key = "key";
-		basin.Items[key] = new MyClass()
+		var myClass = new MyClass()
 		{
 			MyElements = [
 				new MyElement
@@ -274,6 +328,7 @@ public class BasinTests
 				},
 			],
 		};
+		basin.Items[key] = myClass;
 		basin.SetCursor(new BasinCursor
 		{
 			JsonPath = $"$.['{key}'].MyElements[0].Body[0].Text",
@@ -283,6 +338,7 @@ public class BasinTests
 		var writeResult = basin.Write("World!");
 		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
 		Assert.AreSame(basin.Items[key], writeResult);
+		Assert.AreSame(basin.Items[key], myClass);
 		Assert.IsNotNull(writeResult.MyElements, "MyElements is null.");
 		Assert.AreEqual("Hello World!", writeResult.MyElements![0].Body![0].Text);
 
