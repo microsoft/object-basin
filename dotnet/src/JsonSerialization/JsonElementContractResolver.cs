@@ -3,6 +3,7 @@
 using System;
 using Newtonsoft.Json;
 
+// TODO Remove since probably not needed.
 internal sealed class JsonElementContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
 {
 	private static readonly JsonConverter s_jsonElementConverter = new JsonElementConverter();

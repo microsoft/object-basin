@@ -7,7 +7,6 @@ using System.Text;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.JsonPatch.Exceptions;
 using Microsoft.AspNetCore.JsonPatch.Operations;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using ObjectBasin.JsonSerialization;
@@ -21,7 +20,7 @@ using ObjectBasin.JsonSerialization;
 /// </remarks>
 public sealed class Basin<ValueType>
 {
-	private static readonly IContractResolver s_contractResolver = new JsonElementContractResolver();
+	private static readonly IContractResolver s_contractResolver = new DefaultContractResolver();
 	private static readonly Newtonsoft.Json.JsonSerializer s_jsonSerializer = Newtonsoft.Json.JsonSerializer.CreateDefault();
 
 	static Basin()

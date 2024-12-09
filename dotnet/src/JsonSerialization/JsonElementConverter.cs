@@ -1,7 +1,6 @@
 ﻿namespace ObjectBasin.JsonSerialization;
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,9 +12,6 @@ using Newtonsoft.Json.Linq;
 /// </remarks>
 internal sealed class JsonElementConverter : JsonConverter
 {
-	// TODO If we don't use `ReadJson`, then also throw an exception in the method.
-	// public override bool CanRead => false;
-
 	public override bool CanConvert(Type objectType)
 	{
 		return objectType == typeof(System.Text.Json.JsonElement);
@@ -23,18 +19,15 @@ internal sealed class JsonElementConverter : JsonConverter
 
 	public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
 	{
-		object obj;
-		if (reader.TokenType == JsonToken.StartArray)
+		object obj = reader.TokenType switch
 		{
-			obj = JArray.Load(reader);
-		}
-		else
-		{
-			obj = JObject.Load(reader);
-		}
-
-		return System.Text.Json.JsonSerializer.Deserialize<object>(obj.ToString());
+			JsonToken.StartObject => JObject.Load(reader),
+			JsonToken.StartArray => JArray.Load(reader),
+			_ => JToken.Load(reader),
+		};
+		return System.Text.Json.JsonSerializer.Deserialize(obj.ToString(), objectType);
 	}
+
 	public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 	{
 		if (value is null)
@@ -43,6 +36,7 @@ internal sealed class JsonElementConverter : JsonConverter
 			return;
 		}
 
+		// We know it is a `JsonElement` because that is the only type that `CanConvert` allows.
 		var element = (System.Text.Json.JsonElement)value;
 		switch (element.ValueKind)
 		{
