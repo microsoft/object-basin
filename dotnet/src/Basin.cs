@@ -185,11 +185,7 @@ public sealed class Basin<ValueType>
 						: JValue.CreateNull();
 					foreach (var token in obj.SelectTokens(path))
 					{
-						result = token.Type switch
-						{
-							JTokenType.String => this.HandleStringReplace(obj, token, replacementValue),
-							_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
-						};
+						result = this.HandleJTokenReplace(obj, token, replacementValue);
 					}
 				}
 			}
@@ -314,11 +310,11 @@ public sealed class Basin<ValueType>
 		}
 		catch (JsonPatchException)
 		{
-			return this.HandleStringReplace(obj, token, newValue);
+			return this.HandleJTokenReplace(obj, token, newValue);
 		}
 	}
 
-	private ValueType? HandleStringReplace(JObject obj, JToken token, JToken newValue)
+	private ValueType? HandleJTokenReplace(JObject obj, JToken token, JToken newValue)
 	{
 		// Fallback to modifying the token directly.
 		// This is mainly to handle `JsonElement`s.
