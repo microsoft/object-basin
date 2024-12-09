@@ -263,7 +263,6 @@ public sealed class BasinTests
 		Assert.AreEqual("Hello World! How are you?", writeResult.Elements![0].GetProperty("body")[0].GetProperty("text").GetString());
 	}
 
-	[Ignore("Not supported for `JsonElement`s yet.")]
 	[TestMethod]
 	public void MyClass_Elements_Replace_String_In_JsonElement_Test()
 	{

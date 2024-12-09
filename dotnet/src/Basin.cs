@@ -20,19 +20,31 @@ using ObjectBasin.JsonSerialization;
 /// </remarks>
 public sealed class Basin<ValueType>
 {
-	private static readonly IContractResolver s_contractResolver = new DefaultContractResolver();
-	private static readonly Newtonsoft.Json.JsonSerializer s_jsonSerializer = Newtonsoft.Json.JsonSerializer.CreateDefault();
+	private static readonly IContractResolver s_defaultContractResolver = new DefaultContractResolver();
+	private static readonly Newtonsoft.Json.JsonSerializer s_defaultJsonSerializer = Newtonsoft.Json.JsonSerializer.CreateDefault();
 
 	static Basin()
 	{
-		s_jsonSerializer.Converters.Add(new JsonElementConverter());
+		s_defaultJsonSerializer.Converters.Add(new JsonElementConverter());
 	}
 
 	private BasinCursor? cursor;
+
 	/// <summary>
 	/// The JSON Patch pointer path.
 	/// </summary>
 	private string? currentPointer;
+
+	/// <summary>
+	/// Helps reading objects when performing JSON Patch operations.
+	/// </summary>
+	public IContractResolver ContractResolver { private get; set; } = s_defaultContractResolver;
+
+	/// <summary>
+	/// The serializer to use to get a value from a JSON Path
+	/// and to rebuild an object after certain types of modifications.
+	/// </summary>
+	public Newtonsoft.Json.JsonSerializer JsonSerializer { private get; set; } = s_defaultJsonSerializer;
 
 	/// <summary>
 	/// Create a new basin.
@@ -64,7 +76,7 @@ public sealed class Basin<ValueType>
 	/// </returns>
 	public ValueType? ApplyPatch(Operation operation)
 	{
-		new JsonPatchDocument([operation], s_contractResolver)
+		new JsonPatchDocument([operation], this.ContractResolver)
 			.ApplyTo(this.Items);
 		var key = GetTopLevelKey(operation.path);
 		return this.Items[key];
@@ -77,7 +89,7 @@ public sealed class Basin<ValueType>
 	/// <returns>The top level items that were modified.</returns>
 	public IEnumerable<ValueType?> ApplyPatches(List<Operation> operations)
 	{
-		new JsonPatchDocument(operations, s_contractResolver)
+		new JsonPatchDocument(operations, this.ContractResolver)
 			.ApplyTo(this.Items);
 		return operations
 			.Select(o => GetTopLevelKey(o.path))
@@ -126,29 +138,12 @@ public sealed class Basin<ValueType>
 		var pos = this.cursor.Position;
 		if (pos is null)
 		{
-			// Set the value.
-			try
-			{
-				// Need to try to replace first, otherwise a JSONPath like "object.list[1]" would insert a new entry in the list.
-				result = this.ApplyPatch(new Operation("replace", this.currentPointer, null, value));
-			}
-			catch (JsonPatchException exc)
-			{
-				if (exc.Message.EndsWith("' was not found.", StringComparison.Ordinal))
-				{
-					// The location did not exist.
-					result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
-				}
-				else
-				{
-					throw;
-				}
-			}
+			result = this.SetValue(value, result, path);
 		}
 		else
 		{
 			// Find the value(s) at the path, then handle updating them.
-			var obj = JObject.FromObject(this.Items, s_jsonSerializer);
+			var obj = JObject.FromObject(this.Items, this.JsonSerializer);
 			foreach (var token in obj.SelectTokens(path))
 			{
 				result = token.Type switch
@@ -157,6 +152,50 @@ public sealed class Basin<ValueType>
 					JTokenType.Array => this.HandleArrayUpdate(value, pos, token),
 					_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
 				};
+			}
+		}
+
+		return result;
+	}
+
+	private ValueType? SetValue(object? value, ValueType? result, string path)
+	{
+		try
+		{
+			// Need to try to replace first, otherwise a JSONPath like "object.list[1]" would insert a new entry in the list.
+			result = this.ApplyPatch(new Operation("replace", this.currentPointer, null, value));
+		}
+		catch (JsonPatchException exc)
+		{
+			if (exc.Message.EndsWith("' was not found.", StringComparison.Ordinal))
+			{
+				// The location did not exist or there was another issue finding it, perhaps it was a complex object such as a `JsonElement`.
+				try
+				{
+					// Try to add the value.
+					result = this.ApplyPatch(new Operation("add", this.currentPointer, null, value));
+				}
+				catch (JsonPatchException)
+				{
+					// Fallback to modifying the token directly.
+					// This is mainly to handle modifications inside of `JsonElement`s.
+					var obj = JObject.FromObject(this.Items, this.JsonSerializer);
+					var replacementValue = value is not null ?
+						JToken.FromObject(value, this.JsonSerializer)
+						: JValue.CreateNull();
+					foreach (var token in obj.SelectTokens(path))
+					{
+						result = token.Type switch
+						{
+							JTokenType.String => this.HandleStringReplace(obj, token, replacementValue),
+							_ => throw new Exception($"Token of type  {token.Type} cannot be modified yet."),
+						};
+					}
+				}
+			}
+			else
+			{
+				throw;
 			}
 		}
 
@@ -275,14 +314,19 @@ public sealed class Basin<ValueType>
 		}
 		catch (JsonPatchException)
 		{
-			// Fallback to modifying the token directly.
-			// This is mainly to handle `JsonElement`s.
-			token.Replace(newValue);
-			// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
-			// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
-			var key = GetTopLevelKey(this.currentPointer!);
-			var result = obj[key]!.ToObject<ValueType?>(s_jsonSerializer);
-			return this.Items[key] = result;
+			return this.HandleStringReplace(obj, token, newValue);
 		}
+	}
+
+	private ValueType? HandleStringReplace(JObject obj, JToken token, JToken newValue)
+	{
+		// Fallback to modifying the token directly.
+		// This is mainly to handle `JsonElement`s.
+		token.Replace(newValue);
+		// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
+		// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
+		var key = GetTopLevelKey(this.currentPointer!);
+		var result = obj[key]!.ToObject<ValueType?>(this.JsonSerializer);
+		return this.Items[key] = result;
 	}
 }
