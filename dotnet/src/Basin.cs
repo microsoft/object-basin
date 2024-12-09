@@ -169,7 +169,7 @@ public sealed class Basin<ValueType>
 		var pos = cursor.Position;
 		if (pos is null)
 		{
-			result = this.SetValue(value, result, path, cursorLabel);
+			result = this.SetValue(value, result, path, pointer);
 		}
 		else
 		{
@@ -189,10 +189,8 @@ public sealed class Basin<ValueType>
 		return result;
 	}
 
-	private ValueType? SetValue(object? value, ValueType? result, string path, string? cursorLabel)
+	private ValueType? SetValue(object? value, ValueType? result, string path, string pointer)
 	{
-		// Assume that the cursor was set properly before writing.
-		var pointer = cursorLabel is null ? this.defaultPointer! : this.pointers[cursorLabel];
 		try
 		{
 			// Need to try to replace first, otherwise a JSONPath like "object.list[1]" would insert a new entry in the list.
