@@ -12,16 +12,59 @@ using ObjectBasin;
 public sealed class BasinTests
 {
 	[TestMethod]
-	public void ApplyPatchTest()
+	public void ApplyPatch_Test()
 	{
 		var basin = new Basin<string>();
-		basin.ApplyPatch(new()
+		var patchResult = basin.ApplyPatch(new()
 		{
 			op = "add",
 			path = "/weird~0~1~01key",
 			value = "value"
 		});
+		Assert.AreEqual(basin.Items["weird~/~1key"], patchResult);
 		Assert.AreEqual(basin.Items["weird~/~1key"], "value");
+	}
+
+	[TestMethod]
+	public void ApplyPatches_Test()
+	{
+		var basin = new Basin<MyClass>();
+		basin.Items["key"] = new MyClass
+		{
+			Text = "Hello ",
+		};
+		var patchResults = basin.ApplyPatches([
+			new() {
+				op = "replace",
+				path = "/key/text",
+				value = "Replacement",
+			},
+			new(){
+				op = "add",
+				path = "/key/textWithAttribute",
+				value = "new string",
+			}
+		]);
+		var patchResult = patchResults.Single();
+		Assert.AreSame(basin.Items["key"], patchResult);
+		Assert.AreEqual("Replacement", patchResult!.Text);
+		Assert.AreEqual("new string", patchResult.TextWithAttribute);
+
+		patchResults = basin.ApplyPatches([
+			new() {
+				op = "replace",
+				path = "/key/Text",
+				value = "Replacement 2",
+			},
+			new(){
+				op = "add",
+				path = "/key/TextWithAttribute",
+				value = "new string 2",
+			}]);
+		patchResult = patchResults.Single();
+		Assert.AreSame(basin.Items["key"], patchResult);
+		Assert.AreEqual("Replacement 2", patchResult!.Text);
+		Assert.AreEqual("new string 2", patchResult.TextWithAttribute);
 	}
 
 	[TestMethod]
@@ -591,6 +634,21 @@ public sealed class BasinTests
 	public void GetTopLevelKey_Tests(string expected, string input)
 	{
 		Assert.AreEqual(expected, Basin<object>.GetTopLevelKey(input));
+	}
+
+	[TestMethod]
+	public void ProxyText_Tests()
+	{
+		var basin = new Basin<MyClass>();
+		basin.Items["key"] = new MyClass
+		{
+			ProxyText = "Hello ",
+		};
+		basin.SetCursor(new BasinCursor { JsonPath = "$.key.proxyText", Position = -1, });
+		var writeResult = basin.Write("World!");
+		Assert.IsNotNull(writeResult, "Item not found at the cursor.");
+		Assert.AreSame(basin.Items["key"], writeResult);
+		Assert.AreEqual("Hello World!", writeResult.ProxyText);
 	}
 
 	[TestMethod]
