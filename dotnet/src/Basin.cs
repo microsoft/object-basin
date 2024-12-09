@@ -102,7 +102,11 @@ public sealed class Basin<ValueType>
 	/// Set the cursor for future calls to <see cref="Write"/>.
 	/// </summary>
 	/// <param name="cursor">The cursor to use.</param>
-	public void SetCursor(BasinCursor cursor)
+	/// <param name="label">
+	/// The label to use for the cursor.
+	/// This can be used to support having multiple cursors to point to different objects in the basin.
+	/// </param>
+	public void SetCursor(BasinCursor cursor, string? label = null)
 	{
 		this.cursor = cursor;
 
@@ -121,11 +125,15 @@ public sealed class Basin<ValueType>
 	/// <param name="value">The value to write or insert.
 	/// Ignored when deleting items from lists.
 	/// </param>
+	/// <param name="cursorLabel">
+	/// The label of the cursor to use.
+	/// Defaults to the unlabeled cursor.
+	/// </param>
 	/// <returns>
 	/// The current top level item that was modified.
 	/// This reference should be used as a source of truth for the item.
 	/// </returns>
-	public ValueType? Write(object? value)
+	public ValueType? Write(object? value, string? cursorLabel = null)
 	{
 		ValueType? result = default;
 #if DEBUG
