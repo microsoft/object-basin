@@ -1,9 +1,12 @@
 {
 	"name": "object-basin",
-	"version": "2.0.1",
+	"version": "2.1.0",
 	"description": "JavaScript/TypeScript library to stream updates to an object.",
 	"license": "MIT",
-	"repository": "git@github.com:microsoft/object-basin.git",
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/microsoft/object-basin.git"
+	},
 	"author": "Justin D. Harris <juharris@users.noreply.github.com>",
 	"homepage": "https://github.com/microsoft/object-basin",
 	"main": "build/index.js",

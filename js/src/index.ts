@@ -43,7 +43,8 @@ export class BasinCursor {
  * @typeparam T The type of values (top level) that will be modified.
  */
 export class Basin<T> {
-	private _currentKey?: T
+	private readonly _cursors = new Map<string | null | undefined, BasinCursor>()
+	private readonly _keys = new Map<string | null | undefined, string>()
 
 	/**
 	 * @param items The items to contain. If not provided, an empty object will be created.
@@ -51,9 +52,9 @@ export class Basin<T> {
 	 */
 	public constructor(
 		public items: any = {},
-		private _cursor?: BasinCursor) {
-		if (_cursor !== undefined) {
-			this.setCursor(_cursor)
+		cursor?: BasinCursor) {
+		if (cursor !== undefined) {
+			this.setCursor(cursor)
 		}
 	}
 
@@ -85,8 +86,8 @@ export class Basin<T> {
 	/**
 	 * @param cursor The cursor to use.
 	 */
-	public setCursor(cursor: BasinCursor): void {
-		this._cursor = cursor
+	public setCursor(cursor: BasinCursor, label?: string): void {
+		this._cursors.set(label, cursor)
 		if (cursor.j !== undefined) {
 			cursor.jsonPath = cursor.j
 			delete cursor.j
@@ -103,7 +104,7 @@ export class Basin<T> {
 		const expressions = jp.parse(cursor.jsonPath!)
 		for (const expression of expressions) {
 			if (expression.expression.type !== 'root') {
-				this._currentKey = expression.expression.value
+				this._keys.set(label, expression.expression.value)
 				break
 			}
 		}
@@ -115,9 +116,9 @@ export class Basin<T> {
 	 * Ignored when deleting items from lists.
 	 * @returns The current top level item that was modified.
 	 */
-	public write(value?: any): T {
+	public write(value?: any, cursorLabel?: string): T {
 		// For efficiency, assume the cursor is set.
-		const cursor = this._cursor!
+		const cursor = this._cursors.get(cursorLabel)!
 		const position = cursor.position
 		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
@@ -152,6 +153,7 @@ export class Basin<T> {
 			})
 		}
 
-		return this.items[this._currentKey]
+		const key = this._keys.get(cursorLabel)!
+		return this.items[key]
 	}
 }

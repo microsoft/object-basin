@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json;
 using AdaptiveCards;
+using FluentAssertions;
 using Newtonsoft.Json;
 using ObjectBasin;
 
@@ -121,6 +122,83 @@ public sealed class BasinTests
 		basin.SetCursor(new BasinCursor { JsonPath = $"$.['{key}']" });
 		Assert.AreEqual(3, basin.Write(3));
 		Assert.AreEqual(3, basin.Items[key]);
+	}
+
+	[TestMethod]
+	public void MultiCursor_Tests()
+	{
+		var basin = new Basin<MyClass>();
+		var instance = new MyClass
+		{
+			Text = "Hello ",
+			TextWithAttribute = "Hi ",
+			MyElements = [
+				new MyElement {
+					Body = [
+						new MyBodyElement
+						{
+							Text = "Hey ",
+						},
+					],
+				},
+			],
+		};
+		basin.Items["key1"] = instance;
+
+		var defaultCursor = new BasinCursor
+		{
+			JsonPath = "$.['key1'].Text",
+			Position = -1,
+		};
+		basin.SetCursor(defaultCursor);
+		var cursorForTextWithAttribute = new BasinCursor
+		{
+			JsonPath = "$.['key1'].textWithAttribute",
+			Position = -1,
+		};
+		basin.SetCursor(cursorForTextWithAttribute, "1");
+		var cursorForTextInMyElements = new BasinCursor
+		{
+			JsonPath = "$.['key1'].MyElements[0].Body[0].Text",
+			Position = -1,
+		};
+		basin.SetCursor(cursorForTextInMyElements, "2");
+
+		var defaultWriteResult = basin.Write("there");
+		Assert.AreSame(instance, defaultWriteResult);
+		Assert.AreEqual("Hello there", defaultWriteResult!.Text);
+
+		var textWithAttributeWriteResult = basin.Write("guy", "1");
+		Assert.AreSame(instance, textWithAttributeWriteResult);
+		Assert.AreEqual("Hi guy", textWithAttributeWriteResult!.TextWithAttribute);
+
+		var textInMyElementsWriteResult = basin.Write("you", "2");
+		Assert.AreSame(instance, textInMyElementsWriteResult);
+		Assert.AreEqual("Hey you", textInMyElementsWriteResult!.MyElements![0].Body![0].Text);
+
+		defaultWriteResult = basin.Write(".", null);
+		Assert.AreSame(instance, defaultWriteResult);
+
+		textWithAttributeWriteResult = basin.Write(". Bye.", "1");
+		Assert.AreSame(instance, textWithAttributeWriteResult);
+
+		var expected = new MyClass
+		{
+			Text = "Hello there.",
+			TextWithAttribute = "Hi guy. Bye.",
+			MyElements = [
+				new MyElement
+				{
+					Body = [
+						new MyBodyElement
+						{
+							Text = "Hey you",
+						},
+					],
+				},
+			],
+		};
+		textInMyElementsWriteResult.Should().BeEquivalentTo(expected);
 	}
 
 	[TestMethod]

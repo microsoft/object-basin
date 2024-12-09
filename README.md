@@ -15,6 +15,7 @@ This library supports various ways to update objects or their contents:
 * overwriting an item in a list
 * deleting items in a list
 * setting a value in an object
+* tracking different cursors for different streams
 
 # JavaScript / Node.js
 See examples and installation instructions in the [js folder](js/).

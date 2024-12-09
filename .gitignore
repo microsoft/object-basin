@@ -4,6 +4,8 @@ obj/
 
 /js/build/
 
+dotnet/TestResults/
+
 # Logs
 logs
 *.log
