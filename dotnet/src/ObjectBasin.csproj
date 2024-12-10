@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <PackageId>ObjectBasin</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Authors>Justin D. Harris</Authors>
     <Company>Microsoft</Company>
     <Nullable>enable</Nullable>

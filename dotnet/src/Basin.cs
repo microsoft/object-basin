@@ -353,7 +353,8 @@ public sealed class Basin<ValueType>
 		// It's wasteful to reparse the entire object here and force users of the library to make existing references not match the basin any more,
 		// but this seems to be the most robust way to handle changing a string in certain kinds of objects such as `JsonElement`s.
 		var key = GetTopLevelKey(pointer);
-		var result = obj[key]!.ToObject<ValueType?>(this.JsonSerializer);
+		var existingItem = this.Items[key]!;
+		var result = (ValueType?)obj[key]!.ToObject(existingItem.GetType(), this.JsonSerializer);
 		return this.Items[key] = result;
 	}
 }
