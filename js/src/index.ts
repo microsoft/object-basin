@@ -1,5 +1,5 @@
 import jsonpatch, { Operation } from 'fast-json-patch'
-import jp from 'jsonpath'
+import { JSONPath } from 'jsonpath-plus'
 
 // Export to help dependencies because this is used in our interface.
 export { Operation } from 'fast-json-patch'
@@ -101,13 +101,12 @@ export class Basin<T> {
 			delete cursor.d
 		}
 
-		const expressions = jp.parse(cursor.jsonPath!)
-		for (const expression of expressions) {
-			if (expression.expression.type !== 'root') {
-				this._keys.set(label, expression.expression.value)
-				break
-			}
+		if (!cursor.jsonPath!.startsWith('$')) {
+			cursor.jsonPath = '$.' + cursor.jsonPath
 		}
+
+		const pathArray = JSONPath.toPathArray(cursor.jsonPath!)
+		this._keys.set(label, pathArray[1])
 	}
 
 	/**
@@ -123,9 +122,9 @@ export class Basin<T> {
 		const jsonPath = cursor.jsonPath!
 		if (typeof position !== 'number') {
 			// Set the value.
-			jp.value(this.items, jsonPath, value)
+			jpValue(this.items, jsonPath, value)
 		} else {
-			jp.apply(this.items, jsonPath, (currentValue: string) => {
+			jpApply(this.items, jsonPath, (currentValue: string) => {
 				if (Array.isArray(currentValue)) {
 					if (cursor.deleteCount !== undefined) {
 						// Delete
@@ -155,5 +154,33 @@ export class Basin<T> {
 
 		const key = this._keys.get(cursorLabel)!
 		return this.items[key]
+	}
+}
+
+function jpValue(obj: any, path: string, value: any): void {
+	const results: any[] = JSONPath({ path, json: obj, resultType: 'all' })
+	if (results.length > 0) {
+		results[0].parent[results[0].parentProperty] = value
+	} else {
+		// Path doesn't exist yet — create intermediate objects and set the value.
+		const pathArray = JSONPath.toPathArray(path)
+		let current = obj
+		for (let i = 1; i < pathArray.length - 1; i++) {
+			const key = pathArray[i]
+			if (current[key] === undefined) {
+				current[key] = {}
+			}
+			current = current[key]
+		}
+		if (pathArray.length > 1) {
+			current[pathArray[pathArray.length - 1]] = value
+		}
+	}
+}
+
+function jpApply(obj: any, path: string, fn: (value: any) => any): void {
+	const results: any[] = JSONPath({ path, json: obj, resultType: 'all' })
+	for (const result of results) {
+		result.parent[result.parentProperty] = fn(result.value)
 	}
 }
